@@ -2,3 +2,4 @@
 .tools/
 .git-local/
 tmp/
+outputs/

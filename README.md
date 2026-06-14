@@ -8,6 +8,8 @@ This repository is a local Codex workspace for learning, reading, testing, and m
 - `external-frameworks/`: external research frameworks tracked as Git submodules.
   - `paper-qa`: scientific paper question answering and retrieval workflows.
   - `gpt-researcher`: autonomous web research framework.
+- `data/optimizer-graph/`: lightweight CSV graph for optimizer lineage, Muon papers, concepts, and evidence.
+- `scripts/render_optimizer_graph.py`: renders the graph to Mermaid and an interactive HTML view.
 - `requirements/research-requirements.lock`: Python package snapshot for the local research tooling.
 - `.env.example`: optional API key template. Real `.env` stays local and ignored.
 
@@ -31,3 +33,8 @@ The local working environment uses `.tools/python-packages`, which is intentiona
 
 The Codex in-app Browser is preferred for rendered webpage checks. The Playwright CLI skill is kept, but it needs a complete Node/npm/npx Playwright setup before terminal-driven browser automation is available.
 
+Render the seed optimizer graph with:
+
+```powershell
+& 'C:\Users\PC\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe' scripts\render_optimizer_graph.py
+```

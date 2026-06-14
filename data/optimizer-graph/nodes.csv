@@ -1,0 +1,7 @@
+id,label,type,year,summary,source_ids,status
+sgd,SGD,method,,Stochastic gradient descent baseline optimizer.,,seed
+momentum-sgd,Momentum SGD,method,,SGD with momentum buffer.,,seed
+adam,Adam,method,,Adaptive moment estimation optimizer.,,seed
+adamw,AdamW,method,,Adam variant with decoupled weight decay.,,seed
+muon,Muon,method,,Matrix orthogonalization based optimizer family.,,seed
+matrix-orthogonalization,Matrix orthogonalization,concept,,Orthogonalization lens used by Muon-style updates.,,seed

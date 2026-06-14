@@ -1,0 +1,5 @@
+source,target,type,summary,source_ids,confidence
+momentum-sgd,sgd,extends,Adds momentum state to SGD.,,medium
+adam,momentum-sgd,extends,Combines momentum-style first moments with adaptive second moments.,,medium
+adamw,adam,extends,Decouples weight decay from Adam-style adaptive updates.,,medium
+muon,matrix-orthogonalization,uses,Uses matrix orthogonalization as a central update operation.,,medium
