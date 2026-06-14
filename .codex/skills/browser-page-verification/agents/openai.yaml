@@ -1,0 +1,3 @@
+display_name: Browser Page Verification
+short_description: Playwright and Browser checks for dynamic pages.
+default_prompt: Use browser-page-verification to inspect rendered research webpages, dynamic docs, benchmark tables, repo pages, paper pages, and visible page state with Browser or Playwright, then record source-backed evidence.

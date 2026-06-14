@@ -1,0 +1,6 @@
+[submodule "external-frameworks/paper-qa"]
+	path = external-frameworks/paper-qa
+	url = https://github.com/Future-House/paper-qa.git
+[submodule "external-frameworks/gpt-researcher"]
+	path = external-frameworks/gpt-researcher
+	url = https://github.com/assafelovic/gpt-researcher.git

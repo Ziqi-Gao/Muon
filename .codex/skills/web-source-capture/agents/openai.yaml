@@ -1,0 +1,3 @@
+display_name: Web Source Capture
+short_description: Firecrawl-style source capture and fallback rules.
+default_prompt: Use web-source-capture to capture public Muon research sources, paper pages, repos, docs, benchmarks, or implementation notes with Firecrawl-style extraction when available, browser fallback when needed, and explicit evidence labels.

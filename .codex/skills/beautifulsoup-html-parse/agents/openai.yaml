@@ -1,0 +1,3 @@
+display_name: BeautifulSoup HTML Parse
+short_description: Static HTML parsing for source evidence.
+default_prompt: Use beautifulsoup-html-parse to parse raw HTML from paper, repo, docs, benchmark, blog, or project pages and extract links, tables, headings, FAQ text, and evidence notes with source labels.
