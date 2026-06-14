@@ -14,7 +14,7 @@ Treat this skill as CLI-first automation. Do not pivot to `@playwright/test` unl
 Before proposing commands, check whether `npx` is available (the wrapper depends on it):
 
 ```bash
-command -v npx > /dev/null 2>&1
+command -v npx >/dev/null 2>&1
 ```
 
 If it is not available, use the Codex Browser plugin when possible. If CLI automation is truly required, ask the user to install Node.js/npm (which provides `npx`). Provide these steps verbatim:
