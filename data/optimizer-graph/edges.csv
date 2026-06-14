@@ -1,5 +1,73 @@
 source,target,type,summary,source_ids,confidence
-momentum-sgd,sgd,extends,Adds momentum state to SGD.,,medium
-adam,momentum-sgd,extends,Combines momentum-style first moments with adaptive second moments.,,medium
-adamw,adam,extends,Decouples weight decay from Adam-style adaptive updates.,,medium
-muon,matrix-orthogonalization,uses,Uses matrix orthogonalization as a central update operation.,,medium
+sgd,stochastic-approximation,uses,SGD-style noisy updates descend from stochastic approximation.,robbins1951-stochastic-approximation,medium
+momentum-sgd,sgd,extends,Momentum SGD adds a velocity state to gradient descent/SGD.,polyak1964-heavy-ball,high
+momentum-sgd,momentum-buffer,has_component,Momentum buffer stores an exponentially decayed update direction.,polyak1964-heavy-ball,high
+adagrad,sgd,extends,AdaGrad adapts SGD steps with accumulated squared gradients.,duchi2011-adagrad,high
+adagrad,adaptive-stepsize,uses,AdaGrad uses per-coordinate accumulated-gradient scaling.,duchi2011-adagrad,high
+rmsprop,adagrad,extends,RMSProp adds forgetting/EMA to AdaGrad-style squared-gradient scaling.,tieleman2012-rmsprop,medium
+rmsprop,ema-second-moment,uses,RMSProp uses an EMA of squared gradients.,tieleman2012-rmsprop,high
+adam,momentum-sgd,extends,Adam combines first-moment momentum with second-moment adaptive scaling.,kingma2014-adam,high
+adam,rmsprop,extends,Adam builds on RMSProp-style second-moment scaling with bias correction.,kingma2014-adam,high
+adam,ema-second-moment,uses,Adam tracks a second raw moment with EMA and bias correction.,kingma2014-adam,high
+adamw,adam,extends,AdamW decouples weight decay from Adam adaptive updates.,loshchilov2017-adamw,high
+adamw,decoupled-weight-decay,uses,AdamW applies decoupled weight decay.,loshchilov2017-adamw,high
+shampoo,matrix-preconditioning,uses,Shampoo maintains structured preconditioner matrices over tensor axes.,gupta2018-shampoo,high
+soap,shampoo,extends,SOAP improves and stabilizes Shampoo with Adam-style moments in the preconditioner eigenbasis.,vyas2024-soap,high
+soap,eigenbasis-adam,uses,SOAP runs Adam-like second moments in the Shampoo eigenbasis.,vyas2024-soap,high
+muon,momentum-sgd,extends,Muon applies matrix orthogonalization after momentum for 2D hidden-layer updates.,jordan2024-muon,high
+muon,shampoo,motivates,Muon can be interpreted as an accumulation-free Shampoo-like orthogonalized update.,jordan2024-muon;gupta2018-shampoo,medium
+muon,matrix-orthogonalization,uses,Muon orthogonalizes each 2D update matrix before applying it.,jordan2024-muon,high
+muon,newton-schulz,uses,Muon uses a tuned Newton-Schulz polynomial iteration for fast approximate orthogonalization.,jordan2024-muon,high
+muon,adamw,compares_to,Muon papers commonly use AdamW as the main LLM training baseline.,jordan2024-muon;liu2025-muon-scalable;shah2025-practical-efficiency-muon,high
+matrix-orthogonalization,matrix-sign-polar,related_to,Orthogonalized matrix updates correspond to UV^T/polar-factor directions.,jordan2024-muon;amsel2025-polar-express,high
+matrix-orthogonalization,spectral-norm-trust-region,analyzes,Spectral-norm trust-region theory explains orthogonalized gradient directions.,kovalev2025-gradient-orthogonalization;chen2025-spectral-norm-muon,high
+muon,critical-batch-size,has_result,Muon efficiency work studies larger critical batch sizes and compute-time tradeoffs.,shah2025-practical-efficiency-muon;sato2025-critical-batch-muon,medium
+sgd,robbins1951-stochastic-approximation,introduced_by,sgd is introduced or primarily defined by this source.,robbins1951-stochastic-approximation,high
+momentum-sgd,polyak1964-heavy-ball,introduced_by,momentum-sgd is introduced or primarily defined by this source.,polyak1964-heavy-ball,high
+adagrad,duchi2011-adagrad,introduced_by,adagrad is introduced or primarily defined by this source.,duchi2011-adagrad,high
+rmsprop,tieleman2012-rmsprop,introduced_by,rmsprop is introduced or primarily defined by this source.,tieleman2012-rmsprop,high
+adam,kingma2014-adam,introduced_by,adam is introduced or primarily defined by this source.,kingma2014-adam,high
+adamw,loshchilov2017-adamw,introduced_by,adamw is introduced or primarily defined by this source.,loshchilov2017-adamw,high
+shampoo,gupta2018-shampoo,introduced_by,shampoo is introduced or primarily defined by this source.,gupta2018-shampoo,high
+soap,vyas2024-soap,introduced_by,soap is introduced or primarily defined by this source.,vyas2024-soap,high
+muon,jordan2024-muon,introduced_by,muon is introduced or primarily defined by this source.,jordan2024-muon,high
+dion,ahn2025-dion,introduced_by,dion is introduced or primarily defined by this source.,ahn2025-dion,high
+adammuon,si2025-adamuon,introduced_by,adammuon is introduced or primarily defined by this source.,si2025-adamuon,high
+muonbp,khaled2025-muonbp,introduced_by,muonbp is introduced or primarily defined by this source.,khaled2025-muonbp,high
+fedmuon,liu2025-fedmuon-accel,introduced_by,fedmuon is introduced or primarily defined by this source.,liu2025-fedmuon-accel,high
+teon,zhang2026-teon,introduced_by,teon is introduced or primarily defined by this source.,zhang2026-teon,high
+newton-muon,du2026-newton-muon,introduced_by,newton-muon is introduced or primarily defined by this source.,du2026-newton-muon,high
+muon2,liu2026-muon2,introduced_by,muon2 is introduced or primarily defined by this source.,liu2026-muon2,high
+muonq,su2026-muonq,introduced_by,muonq is introduced or primarily defined by this source.,su2026-muonq,high
+mona,li2026-mona,introduced_by,mona is introduced or primarily defined by this source.,li2026-mona,high
+lora-muon,cesista2026-lora-muon,introduced_by,lora-muon is introduced or primarily defined by this source.,cesista2026-lora-muon,high
+dion,muon,extends,Dion targets orthonormalized update costs exposed by Muon under sharding.,ahn2025-dion,high
+adammuon,muon,extends,AdaMuon combines Muon orthogonal updates with elementwise adaptivity.,si2025-adamuon,high
+adammuon,adaptive-stepsize,uses,AdaMuon adds second-moment adaptive scaling to orthogonal update directions.,si2025-adamuon,high
+muonbp,muon,extends,MuonBP changes Muon orthogonalization scheduling for model-parallel throughput.,khaled2025-muonbp,high
+muonbp,block-periodic-orthogonalization,uses,MuonBP is built around block-periodic orthogonalization.,khaled2025-muonbp,high
+fedmuon,muon,extends,FedMuon applies Muon-style local updates in federated learning.,liu2025-fedmuon-accel,high
+teon,muon,extends,TEON generalizes Muon from layer-wise matrices to structured higher-order tensors.,zhang2026-teon,high
+newton-muon,muon,extends,Newton-Muon adds right preconditioning from a Newton-style surrogate model.,du2026-newton-muon,high
+muon2,muon,extends,Muon^2 inserts adaptive second-moment preconditioning before Muon orthogonalization.,liu2026-muon2,high
+muon2,ema-second-moment,uses,Muon^2 borrows Adam-style second-moment preconditioning.,liu2026-muon2,high
+muonq,muon,extends,MuonQ compresses Muon optimizer state to low precision.,su2026-muonq,high
+muonq,optimizer-state-quantization,uses,MuonQ is a low-bit optimizer-state quantization framework.,su2026-muonq,high
+mona,muon,extends,MONA adds Nesterov-like acceleration to Muon.,li2026-mona,high
+lora-muon,muon,extends,LoRA-Muon adapts Muon spectral steepest descent to low-rank adapters.,cesista2026-lora-muon,high
+lora-muon,low-rank-manifold,uses,LoRA-Muon is formulated on the low-rank manifold.,cesista2026-lora-muon,high
+liu2025-muon-scalable,muon,improves,Scales Muon with weight decay and update-scale adjustments for LLM training.,liu2025-muon-scalable,high
+liu2025-muon-scalable,adamw,compares_to,Reports scaling-law and efficiency comparisons against AdamW.,liu2025-muon-scalable,high
+shah2025-practical-efficiency-muon,muon,analyzes,Analyzes practical compute-time efficiency and batch-size behavior of Muon.,shah2025-practical-efficiency-muon,high
+amsel2025-polar-express,newton-schulz,improves,Polar Express proposes an improved matrix sign/polar iteration for Muon-like use.,amsel2025-polar-express,high
+gupta2025-effective-quantization-muon,optimizer-state-quantization,has_result,Shows 8-bit Muon can reduce optimizer-state footprint while maintaining performance in studied settings.,gupta2025-effective-quantization-muon,high
+southworth2026-muon-vit,muon,analyzes,Analyzes Muon in ViT recipes and gradient spectra.,southworth2026-muon-vit,high
+yan2026-muon-adversarial-training,muon,analyzes,Studies Muon under adversarial training and spectral stability.,yan2026-muon-adversarial-training,high
+li2025-note-convergence-muon,muon,analyzes,"This paper analyzes Muon behavior, theory, or implementation requirements.",li2025-note-convergence-muon,high
+kovalev2025-gradient-orthogonalization,muon,analyzes,"This paper analyzes Muon behavior, theory, or implementation requirements.",kovalev2025-gradient-orthogonalization,high
+chen2025-spectral-norm-muon,muon,analyzes,"This paper analyzes Muon behavior, theory, or implementation requirements.",chen2025-spectral-norm-muon,high
+sato2025-critical-batch-muon,muon,analyzes,"This paper analyzes Muon behavior, theory, or implementation requirements.",sato2025-critical-batch-muon,high
+ma2026-preconditioning-benefits-muon,muon,analyzes,"This paper analyzes Muon behavior, theory, or implementation requirements.",ma2026-preconditioning-benefits-muon,high
+kim2026-muon-newton-schulz,muon,analyzes,"This paper analyzes Muon behavior, theory, or implementation requirements.",kim2026-muon-newton-schulz,high
+qi2026-delving-muon-beyond,muon,analyzes,"This paper analyzes Muon behavior, theory, or implementation requirements.",qi2026-delving-muon-beyond,high
+huang2026-how-much-orthogonalization,muon,analyzes,Unverified candidate relation; exact title and arXiv ID need re-check.,huang2026-how-much-orthogonalization,low

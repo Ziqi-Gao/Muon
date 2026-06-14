@@ -1,7 +1,73 @@
 id,label,type,year,summary,source_ids,status
-sgd,SGD,method,,Stochastic gradient descent baseline optimizer.,,seed
-momentum-sgd,Momentum SGD,method,,SGD with momentum buffer.,,seed
-adam,Adam,method,,Adaptive moment estimation optimizer.,,seed
-adamw,AdamW,method,,Adam variant with decoupled weight decay.,,seed
-muon,Muon,method,,Matrix orthogonalization based optimizer family.,,seed
-matrix-orthogonalization,Matrix orthogonalization,concept,,Orthogonalization lens used by Muon-style updates.,,seed
+sgd,SGD,method,1951,Stochastic gradient method rooted in Robbins-Monro stochastic approximation.,robbins1951-stochastic-approximation,active
+momentum-sgd,Momentum SGD,method,1964,SGD with a velocity or heavy-ball momentum buffer.,polyak1964-heavy-ball,active
+adagrad,AdaGrad,method,2011,Adaptive per-coordinate learning rates from accumulated squared gradients.,duchi2011-adagrad,active
+rmsprop,RMSProp,method,2012,Adaptive per-coordinate scaling using an EMA of squared gradients.,tieleman2012-rmsprop,active
+adam,Adam,method,2014,Adaptive moment estimation with bias-corrected first and second moments.,kingma2014-adam,active
+adamw,AdamW,method,2017,Adam variant with decoupled weight decay.,loshchilov2017-adamw,active
+shampoo,Shampoo,method,2018,Structured tensor preconditioner using per-axis second-moment matrices and inverse roots.,gupta2018-shampoo,active
+soap,SOAP,method,2024,Shampoo with Adam-style second moments in the Shampoo preconditioner eigenbasis.,vyas2024-soap,active
+muon,Muon,method,2024,Momentum update for 2D hidden-layer parameters orthogonalized by Newton-Schulz.,jordan2024-muon,active
+dion,Dion,method,2025,Distributed orthonormalized update rule related to Muon systems constraints.,ahn2025-dion,active
+adammuon,AdaMuon,method,2025,Muon variant adding elementwise adaptivity and sign-stabilized orthogonal updates.,si2025-adamuon,active
+muonbp,MuonBP,method,2025,Muon with block-periodic orthogonalization for model-parallel throughput.,khaled2025-muonbp,active
+fedmuon,FedMuon,method,2025,Federated learning variant using Muon-style matrix orthogonalization locally.,liu2025-fedmuon-accel,active
+teon,TEON,method,2026,Tensorized orthonormalization beyond layer-wise Muon.,zhang2026-teon,active
+newton-muon,Newton-Muon,method,2026,Muon extension with input second-moment right preconditioning from a Newton-style surrogate.,du2026-newton-muon,active
+muon2,Muon^2,method,2026,Muon variant using adaptive second-moment preconditioning before orthogonalization.,liu2026-muon2,active
+muonq,MuonQ,method,2026,Low-bit Muon optimizer-state quantization framework.,su2026-muonq,active
+mona,MONA,method,2026,Muon optimizer with Nesterov acceleration for scalable LLM training.,li2026-mona,active
+lora-muon,LoRA-Muon,method,2026,Spectral steepest-descent Muon variant for low-rank adapters.,cesista2026-lora-muon,active
+stochastic-approximation,Stochastic approximation,concept,1951,Noisy recursive approximation framework underlying SGD.,robbins1951-stochastic-approximation,active
+momentum-buffer,Momentum buffer,algorithmic_component,1964,Running velocity that mixes current gradient with previous update direction.,polyak1964-heavy-ball,active
+adaptive-stepsize,Adaptive per-coordinate stepsize,concept,2011,Coordinate-wise learning-rate scaling from gradient statistics.,duchi2011-adagrad;tieleman2012-rmsprop;kingma2014-adam,active
+ema-second-moment,EMA second moment,algorithmic_component,2012,Exponential moving average of squared gradients used by RMSProp/Adam-style optimizers.,tieleman2012-rmsprop;kingma2014-adam,active
+decoupled-weight-decay,Decoupled weight decay,algorithmic_component,2017,Regularization step separated from gradient/adaptive update.,loshchilov2017-adamw,active
+matrix-preconditioning,Matrix preconditioning,concept,2018,Non-diagonal preconditioning of matrix/tensor gradients.,gupta2018-shampoo,active
+eigenbasis-adam,Adam in preconditioner eigenbasis,algorithmic_component,2024,SOAP stabilization mechanism: Adam-style moments in Shampoo eigenbasis.,vyas2024-soap,active
+matrix-orthogonalization,Matrix orthogonalization,concept,2024,Replacement of a matrix update by a semi-orthogonal or polar-factor-like direction.,jordan2024-muon;amsel2025-polar-express,active
+newton-schulz,Newton-Schulz iteration,algorithmic_component,2024,GPU-friendly polynomial iteration used by Muon to approximate orthogonalization.,jordan2024-muon;kim2026-muon-newton-schulz,active
+matrix-sign-polar,Matrix sign / polar factor,concept,2025,UV^T-like matrix direction obtained from polar decomposition or sign iteration.,jordan2024-muon;amsel2025-polar-express,active
+spectral-norm-trust-region,Spectral-norm trust region,concept,2025,Non-Euclidean trust-region view of orthogonalized matrix updates.,kovalev2025-gradient-orthogonalization;chen2025-spectral-norm-muon,active
+critical-batch-size,Critical batch size,concept,2025,Batch-size threshold governing compute/data efficiency in optimizer scaling.,shah2025-practical-efficiency-muon;sato2025-critical-batch-muon,active
+block-periodic-orthogonalization,Block-periodic orthogonalization,algorithmic_component,2025,Alternates local block orthogonalization with periodic full orthogonalization.,khaled2025-muonbp,active
+optimizer-state-quantization,Optimizer-state quantization,system_component,2025,Low-bit storage of optimizer states for memory reduction.,gupta2025-effective-quantization-muon;su2026-muonq,active
+low-rank-manifold,Low-rank manifold optimization,concept,2025,Optimization over fixed-rank/LoRA-style matrix factors.,bogachev2025-riemannion;cesista2026-lora-muon,active
+robbins1951-stochastic-approximation,A Stochastic Approximation Method,paper,1951,Classical stochastic approximation root for SGD-style noisy updates.,robbins1951-stochastic-approximation,active
+polyak1964-heavy-ball,Some Methods of Speeding Up the Convergence of Iteration Methods,paper,1964,Canonical heavy-ball momentum source for momentum SGD lineage.,polyak1964-heavy-ball,active
+duchi2011-adagrad,Adaptive Subgradient Methods for Online Learning and Stochastic Optimization,paper,2011,Introduces AdaGrad and accumulated squared-gradient geometry.,duchi2011-adagrad,active
+tieleman2012-rmsprop,Lecture 6.5 RMSProp: Divide the gradient by a running average of its recent magnitude,paper,2012,Commonly cited original RMSProp lecture source; not a peer-reviewed paper.,tieleman2012-rmsprop,active
+kingma2014-adam,Adam: A Method for Stochastic Optimization,paper,2014,Introduces Adam with bias-corrected first and second moment estimates.,kingma2014-adam,active
+loshchilov2017-adamw,Decoupled Weight Decay Regularization,paper,2017,Separates weight decay from adaptive-gradient update; AdamW baseline for Muon comparisons.,loshchilov2017-adamw,active
+gupta2018-shampoo,Shampoo: Preconditioned Stochastic Tensor Optimization,paper,2018,Introduces structured tensor preconditioning and inverse-root matrix updates.,gupta2018-shampoo,active
+vyas2024-soap,SOAP: Improving and Stabilizing Shampoo using Adam,paper,2024,Combines Shampoo preconditioner eigenbasis with Adam-style second moments.,vyas2024-soap,active
+bernstein2024-old-optimizer-new-norm,"Old Optimizer, New Norm: An Anthology",paper,2024,Norm/duality lens later used in Muon explanations.,bernstein2024-old-optimizer-new-norm,active
+bernstein2024-modular-duality,Modular Duality in Deep Learning,paper,2024,Layerwise duality and GPU-friendly Newton-Schulz methods related to Muon.,bernstein2024-modular-duality,active
+jordan2024-muon,Muon: An optimizer for hidden layers in neural networks,paper,2024,Primary public Muon definition and design explanation; not peer-reviewed.,jordan2024-muon,active
+li2025-note-convergence-muon,A Note on the Convergence of Muon,paper,2025,Early theory note connecting Muon to spectral-norm steepest descent.,li2025-note-convergence-muon,active
+liu2025-muon-scalable,Muon is Scalable for LLM Training,paper,2025,Scales Muon to large LLM/MoE training with weight decay and update scaling.,liu2025-muon-scalable,active
+kovalev2025-gradient-orthogonalization,Understanding Gradient Orthogonalization for Deep Learning via Non-Euclidean Trust-Region Optimization,paper,2025,Shows orthogonalized gradients as spectral-norm trust-region updates and recovers Muon as a special case.,kovalev2025-gradient-orthogonalization,active
+ahn2025-dion,Dion: Distributed Orthonormalized Updates,paper,2025,Distributed orthonormalized update rule motivated by Muon sharding costs.,ahn2025-dion,active
+shah2025-practical-efficiency-muon,Practical Efficiency of Muon for Pretraining,paper,2025,"Studies Muon compute-time Pareto frontier, batch scaling, and muP transfer.",shah2025-practical-efficiency-muon,active
+amsel2025-polar-express,The Polar Express: Optimal Matrix Sign Methods and Their Application to the Muon Algorithm,paper,2025,Improves matrix sign/polar subroutine used inside Muon.,amsel2025-polar-express,active
+therien2025-muloco,MuLoCo: Muon is a practical inner optimizer for DiLoCo,paper,2025,Uses Muon as the inner optimizer in distributed low-communication training.,therien2025-muloco,active
+chen2025-spectral-norm-muon,Muon Optimizes Under Spectral Norm Constraints,paper,2025,Formalizes Muon under spectral norm constraints.,chen2025-spectral-norm-muon,active
+sato2025-critical-batch-muon,Convergence Bound and Critical Batch Size of Muon Optimizer,paper,2025,Analyzes Muon convergence and critical batch size with momentum and weight decay settings.,sato2025-critical-batch-muon,active
+si2025-adamuon,AdaMuon: Adaptive Muon Optimizer,paper,2025,Combines orthogonal updates with elementwise adaptivity and RMS-aligned rescaling.,si2025-adamuon,active
+bogachev2025-riemannion,LoRA meets Riemannion: Muon Optimizer for Parametrization-independent Low-Rank Adapters,paper,2025,Generalizes Muon to fixed-rank manifold optimization for LoRA.,bogachev2025-riemannion,active
+gupta2025-effective-quantization-muon,Effective Quantization of Muon Optimizer States,paper,2025,Blockwise 8-bit Muon state quantization with empirical parity and memory reduction.,gupta2025-effective-quantization-muon,active
+khaled2025-muonbp,MuonBP: Faster Muon via Block-Periodic Orthogonalization,paper,2025,Reduces Muon communication overhead with block-periodic orthogonalization.,khaled2025-muonbp,active
+liu2025-fedmuon-accel,FedMuon: Accelerating Federated Learning with Matrix Orthogonalization,paper,2025,Applies Muon locally in federated learning with alignment and momentum aggregation.,liu2025-fedmuon-accel,active
+ma2026-preconditioning-benefits-muon,Preconditioning Benefits of Spectral Orthogonalization in Muon,paper,2026,Proves simplified Muon can remove condition-number dependence in selected matrix problems.,ma2026-preconditioning-benefits-muon,active
+li2026-variance-adaptive-muon,Variance-Adaptive Muon: Accelerating LLM Pretraining with NSR-Modulated and Variance-Scaled Momentum,paper,2026,Adds variance-adaptive normalization to Muon momentum before orthogonalization.,li2026-variance-adaptive-muon,active
+kim2026-muon-newton-schulz,Convergence of Muon with Newton-Schulz,paper,2026,Analyzes practical Muon with a few Newton-Schulz steps instead of exact SVD polar factor.,kim2026-muon-newton-schulz,active
+zhang2026-teon,TEON: Tensorized Orthonormalization Beyond Layer-Wise Muon for Large Language Model Pre-Training,paper,2026,Generalizes layer-wise Muon to structured higher-order gradient tensors.,zhang2026-teon,active
+qi2026-delving-muon-beyond,Delving into Muon and Beyond: Deep Analysis and Extensions,paper,2026,Studies Muon as p=0 endpoint of spectral transforms and compares RMS-normalized variants.,qi2026-delving-muon-beyond,active
+du2026-newton-muon,The Newton-Muon Optimizer,paper,2026,Derives Newton-Muon and interprets standard Muon as neglecting input second-moment right preconditioning.,du2026-newton-muon,active
+liu2026-muon2,Muon^2: Boosting Muon via Adaptive Second-Moment Preconditioning,paper,2026,Applies Adam-style second-moment preconditioning before orthogonalization to improve polar approximation.,liu2026-muon2,active
+su2026-muonq,MuonQ: Enhancing Low-Bit Muon Quantization via Directional Fidelity Optimization,paper,2026,Low-bit Muon state quantization via directional fidelity and companding.,su2026-muonq,active
+southworth2026-muon-vit,Muon in Vision Transformers: Optimizer-Recipe Interactions and Gradient Spectra,paper,2026,Studies Muon behavior in ViTs and interaction with augmentation recipes and gradient spectra.,southworth2026-muon-vit,active
+li2026-mona,MONA: Muon Optimizer with Nesterov Acceleration for Scalable Language Model Training,paper,2026,Adds Nesterov-like acceleration term to Muon gradient pipeline with large-scale MoE experiments.,li2026-mona,active
+yan2026-muon-adversarial-training,When Muon Optimizer Meets Adversarial Training: A Theoretical and Empirical Study,paper,2026,Studies Muon in adversarial training with spectral-norm stability claims and robust benchmarks.,yan2026-muon-adversarial-training,active
+huang2026-how-much-orthogonalization,How Much Orthogonalization Does Muon Need?,paper,2026,Needs re-check before being treated as confirmed Muon literature.,huang2026-how-much-orthogonalization,needs_review
+cesista2026-lora-muon,LoRA-Muon: Spectral Steepest Descent on the Low-Rank Manifold,paper,2026,Applies Muon spectral steepest descent to LoRA low-rank factors; very recent at search date.,cesista2026-lora-muon,active

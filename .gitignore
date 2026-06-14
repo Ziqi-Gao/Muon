@@ -3,3 +3,4 @@
 .git-local/
 tmp/
 outputs/
+lib/
