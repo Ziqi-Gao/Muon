@@ -1,0 +1,46 @@
+flowchart LR
+  start["Optimizer history"]
+  n_sgd["SGD\n1951"]
+  start --> n_sgd
+  n_momentum_sgd["Momentum SGD\n1964"]
+  n_sgd --> n_momentum_sgd
+  n_adagrad["AdaGrad\n2011"]
+  n_momentum_sgd --> n_adagrad
+  n_rmsprop["RMSProp\n2012"]
+  n_adagrad --> n_rmsprop
+  n_adam["Adam\n2014"]
+  n_rmsprop --> n_adam
+  n_adamw["AdamW\n2017"]
+  n_adam --> n_adamw
+  n_shampoo["Shampoo\n2018"]
+  n_adamw --> n_shampoo
+  n_soap["SOAP\n2024"]
+  n_shampoo --> n_soap
+  n_muon["Muon\n2024"]
+  n_soap --> n_muon
+  survey["Muon survey corpus"]
+  n_muon --> survey
+  n_cluster_muon_core["Muon Core\n22 nodes"]
+  survey --> n_cluster_muon_core
+  n_cluster_variants["Muon Variants\n38 nodes"]
+  survey --> n_cluster_variants
+  n_cluster_theory["Theory And Geometry\n56 nodes"]
+  survey --> n_cluster_theory
+  n_cluster_systems["Systems And Scaling\n25 nodes"]
+  survey --> n_cluster_systems
+  n_cluster_applications["Applications\n7 nodes"]
+  survey --> n_cluster_applications
+  n_cluster_components["Concepts And Components\n20 nodes"]
+  survey --> n_cluster_components
+  n_cluster_results["Results\n1 nodes"]
+  survey --> n_cluster_results
+  n_cluster_other["Other\n5 nodes"]
+  survey --> n_cluster_other
+  n_cluster_applications -. 4 links .-> n_cluster_components
+  n_cluster_muon_core -. 10 links .-> n_cluster_components
+  n_cluster_systems -. 17 links .-> n_cluster_components
+  n_cluster_theory -. 46 links .-> n_cluster_components
+  n_cluster_variants -. 5 links .-> n_cluster_components
+  n_cluster_variants -. 12 links .-> n_cluster_muon_core
+  n_cluster_variants -. 10 links .-> n_cluster_systems
+  n_cluster_variants -. 14 links .-> n_cluster_theory

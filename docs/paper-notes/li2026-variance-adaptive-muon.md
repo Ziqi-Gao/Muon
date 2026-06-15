@@ -38,3 +38,12 @@ Add or keep method nodes for Muon-NSR and Muon-VS if the next phase extracts sta
 - Does the method introduce additional optimizer state beyond Muon?
 - How is variance estimated and normalized across matrix shapes?
 - Which baselines and model scales are most important for the survey table?
+
+## Phase 2 Evidence Audit
+
+- Search/cutoff date: 2026-06-14.
+- Registry status: `included` / `core`.
+- Evidence confidence: high.
+- Evidence URLs: https://arxiv.org/abs/2601.14603.
+- Audit note: Adds variance-adaptive normalization to Muon momentum before orthogonalization.
+

@@ -38,3 +38,12 @@ Keep as a core Muon theory source with an `analyzes` edge to Muon.
 - Which Muon variant does each convergence statement cover?
 - What assumptions differ from practical LLM training settings?
 - How should the spectral-norm view connect to later trust-region and Lion-K analyses?
+
+## Phase 2 Evidence Audit
+
+- Search/cutoff date: 2026-06-14.
+- Registry status: `included` / `core`.
+- Evidence confidence: medium.
+- Evidence URLs: https://arxiv.org/abs/2502.02900.
+- Audit note: Early theory note connecting Muon to spectral-norm steepest descent.
+

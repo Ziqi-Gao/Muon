@@ -38,3 +38,12 @@ Promote to graph as a core optimizer/Muon source with typed evidence edges.
 - What exact assumptions or benchmark settings support the headline claim?
 - Which graph edges need stronger source locators?
 - Does the method extend Muon, compare to Muon, or only share matrix/spectral machinery?
+
+## Phase 2 Evidence Audit
+
+- Search/cutoff date: 2026-06-14.
+- Registry status: `included` / `core`.
+- Evidence confidence: medium.
+- Evidence URLs: https://jmlr.org/papers/v12/duchi11a.html.
+- Audit note: Introduces AdaGrad and accumulated squared-gradient geometry.
+

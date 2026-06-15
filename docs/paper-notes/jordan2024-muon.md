@@ -38,3 +38,12 @@ Promote to graph as a core optimizer/Muon source with typed evidence edges.
 - What exact assumptions or benchmark settings support the headline claim?
 - Which graph edges need stronger source locators?
 - Does the method extend Muon, compare to Muon, or only share matrix/spectral machinery?
+
+## Phase 2 Evidence Audit
+
+- Search/cutoff date: 2026-06-14.
+- Registry status: `included` / `core`.
+- Evidence confidence: medium.
+- Evidence URLs: https://kellerjordan.github.io/posts/muon/; https://github.com/KellerJordan/modded-nanogpt.
+- Audit note: Primary public Muon definition and design explanation; not peer-reviewed.
+

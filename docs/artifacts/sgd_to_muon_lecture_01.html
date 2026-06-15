@@ -1,0 +1,868 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>从 SGD 到 Muon 第一讲</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #f4f1ea;
+      color: #17202a;
+      font-family: "Noto Serif SC", "Microsoft YaHei", "SimSun", serif;
+      letter-spacing: 0;
+    }
+
+    .page {
+      position: relative;
+      width: 210mm;
+      height: 297mm;
+      padding: 19mm 18mm 17mm;
+      background: #fffdf8;
+      page-break-after: always;
+      overflow: hidden;
+    }
+
+    .page:last-child {
+      page-break-after: auto;
+    }
+
+    .topline {
+      position: absolute;
+      left: 18mm;
+      right: 18mm;
+      top: 12mm;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #66717d;
+      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      font-size: 9pt;
+    }
+
+    .footer {
+      position: absolute;
+      left: 18mm;
+      right: 18mm;
+      bottom: 9mm;
+      display: flex;
+      justify-content: space-between;
+      color: #7a828a;
+      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      font-size: 9pt;
+      border-top: 1px solid #d9d4ca;
+      padding-top: 3mm;
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      font-size: 31pt;
+      line-height: 1.15;
+      color: #0f2638;
+    }
+
+    h2 {
+      font-size: 22pt;
+      line-height: 1.2;
+      color: #10344c;
+      margin-bottom: 7mm;
+    }
+
+    h3 {
+      font-size: 13.5pt;
+      color: #274c5e;
+      margin: 4mm 0 2mm;
+    }
+
+    p, li {
+      font-size: 12.2pt;
+      line-height: 1.75;
+    }
+
+    p {
+      margin: 0 0 4mm;
+    }
+
+    ul, ol {
+      margin: 2mm 0 4mm 7mm;
+      padding-left: 5mm;
+    }
+
+    li {
+      margin: 1.5mm 0;
+    }
+
+    .lead {
+      font-size: 16pt;
+      line-height: 1.65;
+      color: #2f3c48;
+      margin-top: 9mm;
+      max-width: 155mm;
+    }
+
+    .subtitle {
+      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      font-size: 14pt;
+      color: #6b4b20;
+      margin-top: 6mm;
+    }
+
+    .rule {
+      width: 48mm;
+      height: 1.4mm;
+      background: #b45f2a;
+      margin: 8mm 0 10mm;
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7mm;
+      margin-top: 4mm;
+    }
+
+    .box {
+      border: 1px solid #d8cdbd;
+      background: #fbf8f1;
+      border-radius: 3mm;
+      padding: 5mm;
+    }
+
+    .box.blue {
+      border-color: #bfd4dd;
+      background: #f3f9fb;
+    }
+
+    .box.amber {
+      border-color: #dcc49b;
+      background: #fff8e8;
+    }
+
+    .box.green {
+      border-color: #b9d1c2;
+      background: #f1faf4;
+    }
+
+    .box h3 {
+      margin-top: 0;
+    }
+
+    .legend {
+      margin: -2mm 0 4mm;
+      padding: 3.2mm 4.5mm;
+    }
+
+    .legend ul {
+      columns: 2;
+      column-gap: 7mm;
+      margin: 1mm 0 0 4mm;
+      padding-left: 4mm;
+    }
+
+    .legend li {
+      break-inside: avoid;
+      font-size: 10.2pt;
+      line-height: 1.5;
+      margin: 0.8mm 0;
+    }
+
+    .formula {
+      margin: 4mm 0 6mm;
+      padding: 4mm 5mm;
+      background: #f7f7f2;
+      border: 1px solid #d7d7cf;
+      border-radius: 2mm;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .formula.tight {
+      margin: 2.5mm 0 4mm;
+      padding: 3mm 4mm;
+    }
+
+    math {
+      font-family: "Cambria Math", "Cambria", "Noto Serif SC", "Microsoft YaHei", serif;
+      font-size: 19pt;
+      line-height: 1.25;
+    }
+
+    .smallmath math {
+      font-size: 16pt;
+    }
+
+    .note {
+      color: #4c5964;
+      font-size: 11.2pt;
+      line-height: 1.65;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 1.2mm 2.7mm;
+      border-radius: 99px;
+      background: #e7eef2;
+      color: #274c5e;
+      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      font-size: 9.5pt;
+      margin-right: 2mm;
+    }
+
+    .chalk {
+      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      font-size: 10.8pt;
+      line-height: 1.6;
+      color: #263238;
+      border-left: 3px solid #b45f2a;
+      padding-left: 4mm;
+      margin-top: 4mm;
+    }
+
+    .pseudo {
+      font-family: Consolas, "Noto Sans Mono CJK SC", monospace;
+      font-size: 10.8pt;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      background: #101820;
+      color: #edf5f5;
+      border-radius: 3mm;
+      padding: 5mm;
+      margin: 4mm 0;
+    }
+
+    .matrix-path {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 4mm;
+      margin-top: 5mm;
+    }
+
+    .step {
+      border-radius: 3mm;
+      padding: 4mm;
+      min-height: 38mm;
+      background: #f8f5ee;
+      border: 1px solid #d7cab7;
+    }
+
+    .step strong {
+      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      color: #0f3b52;
+    }
+
+    .contours {
+      width: 100%;
+      height: 62mm;
+      margin-top: 3mm;
+    }
+
+    .caption {
+      color: #6d747b;
+      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      font-size: 9.8pt;
+      text-align: center;
+      margin-top: 1mm;
+    }
+
+    .summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 4mm;
+      font-size: 11pt;
+    }
+
+    .summary-table th,
+    .summary-table td {
+      border: 1px solid #d9d4ca;
+      padding: 3mm;
+      text-align: left;
+      vertical-align: top;
+      line-height: 1.55;
+    }
+
+    .summary-table th {
+      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      background: #eef4f5;
+      color: #24485a;
+    }
+  </style>
+</head>
+<body>
+
+<section class="page">
+  <div class="topline"><span>从 SGD 到 Muon</span><span>Lecture 01</span></div>
+  <h1>从 SGD 开始理解<br>现代神经网络优化器</h1>
+  <div class="subtitle">第一讲：随机梯度下降的三种身份</div>
+  <div class="rule"></div>
+  <p class="lead">这份讲义的目标不是背公式，而是建立一个会反复使用的框架：优化器每一步到底在选择什么方向，如何缩放这个方向，以及随机噪声如何改变训练动力学。</p>
+  <div class="grid2" style="margin-top:14mm;">
+    <div class="box blue">
+      <h3>本讲要回答</h3>
+      <ul>
+        <li>为什么 SGD 是全量梯度下降的随机近似？</li>
+        <li>mini-batch 梯度为什么可以看作带噪声的真梯度？</li>
+        <li>学习率为什么被曲率限制？</li>
+        <li>为什么这会自然引向 Momentum、Adam 和 Muon？</li>
+      </ul>
+    </div>
+    <div class="box amber">
+      <h3>本讲暂不做</h3>
+      <ul>
+        <li>不直接证明 Muon 的完整性质。</li>
+        <li>不把所有优化器混在一起讲。</li>
+        <li>先把 SGD 作为基准坐标系立住。</li>
+      </ul>
+    </div>
+  </div>
+  <p class="note" style="position:absolute; bottom:28mm; left:18mm;">建议读法：把每一页当成课堂板书，先看公式，再看公式下面的问题。</p>
+  <div class="footer"><span>中文讲义</span><span>2026-06-15</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>01 问题设定</span><span>2</span></div>
+  <h2>训练到底在最小化什么？</h2>
+  <p>设模型参数为一个向量。现在先不关心它来自线性层、卷积层还是 Transformer，只把所有参数摊平成：</p>
+  <div class="formula tight">
+    <math display="block">
+      <mi>θ</mi><mo>∈</mo><msup><mi>R</mi><mi>d</mi></msup>
+    </math>
+  </div>
+  <p>理论上，我们希望最小化总体风险，也就是对真实数据分布的期望损失：</p>
+  <div class="formula">
+    <math display="block">
+      <mi>L</mi><mo>(</mo><mi>θ</mi><mo>)</mo>
+      <mo>=</mo>
+      <msub>
+        <mi>E</mi>
+        <mrow><mi>z</mi><mo>∼</mo><mi>D</mi></mrow>
+      </msub>
+      <mo>[</mo>
+      <mi>ℓ</mi><mo>(</mo><mi>θ</mi><mo>;</mo><mi>z</mi><mo>)</mo>
+      <mo>]</mo>
+    </math>
+  </div>
+  <div class="box blue legend">
+    <h3>符号说明</h3>
+    <ul>
+      <li><strong>L(θ)</strong>：模型在真实数据上的平均损失。</li>
+      <li><strong>θ</strong>：模型参数，可以先理解成所有权重摊成的向量。</li>
+      <li><strong>z</strong>：一个训练样本，通常包含输入和标签。</li>
+      <li><strong>D</strong>：真实数据分布，也就是样本从哪里来。</li>
+      <li><strong>ℓ(θ; z)</strong>：参数为 θ 时，在单个样本 z 上的损失。</li>
+      <li><strong>E<sub>z∼D</sub>[...]</strong>：对从 D 中抽到的样本取平均。</li>
+    </ul>
+  </div>
+  <p>现实中我们只有训练集，所以常用经验风险：</p>
+  <div class="formula">
+    <math display="block">
+      <msub><mi>L</mi><mi>N</mi></msub>
+      <mo>(</mo><mi>θ</mi><mo>)</mo>
+      <mo>=</mo>
+      <mfrac><mn>1</mn><mi>N</mi></mfrac>
+      <munderover>
+        <mo>∑</mo>
+        <mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow>
+        <mi>N</mi>
+      </munderover>
+      <mi>ℓ</mi><mo>(</mo><mi>θ</mi><mo>;</mo><msub><mi>z</mi><mi>i</mi></msub><mo>)</mo>
+    </math>
+  </div>
+  <div class="box green">
+    <h3>课堂提醒</h3>
+    <p>优化器真正看到的不是数据分布，而是训练过程中不断抽到的 mini-batch。SGD 的随机性就是从这里来的。</p>
+  </div>
+  <div class="footer"><span>目标函数与参数</span><span>2 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>02 从 GD 到 SGD</span><span>3</span></div>
+  <h2>全量梯度下降太贵，SGD 是它的廉价估计</h2>
+  <p>如果每一步都看完整训练集，得到的是全量梯度下降：</p>
+  <div class="formula">
+    <math display="block">
+      <msub><mi>θ</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub>
+      <mo>=</mo>
+      <msub><mi>θ</mi><mi>t</mi></msub>
+      <mo>-</mo>
+      <mi>η</mi>
+      <mi>∇</mi>
+      <mi>L</mi><mo>(</mo><msub><mi>θ</mi><mi>t</mi></msub><mo>)</mo>
+    </math>
+  </div>
+  <p>SGD 改成只看一个 mini-batch。令这一批样本的索引集合为：</p>
+  <div class="formula tight">
+    <math display="block">
+      <msub><mi>B</mi><mi>t</mi></msub>
+      <mo>⊂</mo>
+      <mo>{</mo><mn>1</mn><mo>,</mo><mo>...</mo><mo>,</mo><mi>N</mi><mo>}</mo>
+      <mo>,</mo>
+      <mspace width="0.4em"></mspace>
+      <mo>|</mo><msub><mi>B</mi><mi>t</mi></msub><mo>|</mo><mo>=</mo><mi>B</mi>
+    </math>
+  </div>
+  <p>mini-batch 梯度定义为：</p>
+  <div class="formula">
+    <math display="block">
+      <msub><mi>g</mi><mi>t</mi></msub>
+      <mo>=</mo>
+      <mfrac><mn>1</mn><mi>B</mi></mfrac>
+      <munder>
+        <mo>∑</mo>
+        <mrow><mi>i</mi><mo>∈</mo><msub><mi>B</mi><mi>t</mi></msub></mrow>
+      </munder>
+      <msub><mi>∇</mi><mi>θ</mi></msub>
+      <mi>ℓ</mi><mo>(</mo><msub><mi>θ</mi><mi>t</mi></msub><mo>;</mo><msub><mi>z</mi><mi>i</mi></msub><mo>)</mo>
+    </math>
+  </div>
+  <p>于是 SGD 的一行更新就是：</p>
+  <div class="formula">
+    <math display="block">
+      <msub><mi>θ</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub>
+      <mo>=</mo>
+      <msub><mi>θ</mi><mi>t</mi></msub>
+      <mo>-</mo>
+      <msub><mi>η</mi><mi>t</mi></msub>
+      <msub><mi>g</mi><mi>t</mi></msub>
+    </math>
+  </div>
+  <div class="pseudo">for t = 0, 1, 2, ...
+    sample a mini-batch B_t
+    compute gradient estimate g_t
+    update theta <- theta - eta_t * g_t</div>
+  <div class="footer"><span>SGD 更新式</span><span>3 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>03 随机近似</span><span>4</span></div>
+  <h2>SGD 的核心性质：无偏但有噪声</h2>
+  <p>在常见的均匀采样假设下，mini-batch 梯度是全量梯度的无偏估计：</p>
+  <div class="formula">
+    <math display="block">
+      <mi>E</mi>
+      <mo>[</mo>
+      <msub><mi>g</mi><mi>t</mi></msub>
+      <mo>|</mo>
+      <msub><mi>θ</mi><mi>t</mi></msub>
+      <mo>]</mo>
+      <mo>=</mo>
+      <mi>∇</mi>
+      <mi>L</mi><mo>(</mo><msub><mi>θ</mi><mi>t</mi></msub><mo>)</mo>
+    </math>
+  </div>
+  <p>所以我们可以把它拆成真梯度加噪声：</p>
+  <div class="formula">
+    <math display="block">
+      <msub><mi>g</mi><mi>t</mi></msub>
+      <mo>=</mo>
+      <mi>∇</mi>
+      <mi>L</mi><mo>(</mo><msub><mi>θ</mi><mi>t</mi></msub><mo>)</mo>
+      <mo>+</mo>
+      <msub><mi>ξ</mi><mi>t</mi></msub>
+      <mo>,</mo>
+      <mspace width="0.6em"></mspace>
+      <mi>E</mi><mo>[</mo><msub><mi>ξ</mi><mi>t</mi></msub><mo>|</mo><msub><mi>θ</mi><mi>t</mi></msub><mo>]</mo>
+      <mo>=</mo>
+      <mn>0</mn>
+    </math>
+  </div>
+  <p>把这个拆分代回更新式：</p>
+  <div class="formula smallmath">
+    <math display="block">
+      <msub><mi>θ</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub>
+      <mo>=</mo>
+      <msub><mi>θ</mi><mi>t</mi></msub>
+      <mo>-</mo>
+      <msub><mi>η</mi><mi>t</mi></msub>
+      <mi>∇</mi>
+      <mi>L</mi><mo>(</mo><msub><mi>θ</mi><mi>t</mi></msub><mo>)</mo>
+      <mo>-</mo>
+      <msub><mi>η</mi><mi>t</mi></msub>
+      <msub><mi>ξ</mi><mi>t</mi></msub>
+    </math>
+  </div>
+  <div class="grid2">
+    <div class="box blue">
+      <h3>确定性部分</h3>
+      <p>沿着负梯度方向下降，体现优化目标的几何。</p>
+    </div>
+    <div class="box amber">
+      <h3>随机性部分</h3>
+      <p>每一步都注入噪声，影响探索、稳定性和泛化行为。</p>
+    </div>
+  </div>
+  <div class="chalk">这就是 SGD 的第二个身份：它不是单纯的下降算法，而是一个带噪声的离散动力系统。</div>
+  <div class="footer"><span>无偏估计与梯度噪声</span><span>4 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>04 学习率</span><span>5</span></div>
+  <h2>学习率不是旋钮，它受曲率约束</h2>
+  <p>假设损失函数是 β-smooth，也就是梯度变化不太剧烈。一个常用的不等式是：</p>
+  <div class="formula smallmath">
+    <math display="block">
+      <mi>L</mi><mo>(</mo><mi>θ</mi><mo>-</mo><mi>η</mi><mi>g</mi><mo>)</mo>
+      <mo>≤</mo>
+      <mi>L</mi><mo>(</mo><mi>θ</mi><mo>)</mo>
+      <mo>-</mo>
+      <mi>η</mi>
+      <msup>
+        <mrow><mi>∇</mi><mi>L</mi><mo>(</mo><mi>θ</mi><mo>)</mo></mrow>
+        <mi>T</mi>
+      </msup>
+      <mi>g</mi>
+      <mo>+</mo>
+      <mfrac>
+        <mrow><mi>β</mi><msup><mi>η</mi><mn>2</mn></msup></mrow>
+        <mn>2</mn>
+      </mfrac>
+      <msup><mrow><mo>||</mo><mi>g</mi><mo>||</mo></mrow><mn>2</mn></msup>
+    </math>
+  </div>
+  <p>当 g 等于完整梯度时，下降项和二次惩罚项之间有一个竞争关系：</p>
+  <div class="formula smallmath">
+    <math display="block">
+      <mi>L</mi><mo>(</mo><msub><mi>θ</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>)</mo>
+      <mo>≤</mo>
+      <mi>L</mi><mo>(</mo><msub><mi>θ</mi><mi>t</mi></msub><mo>)</mo>
+      <mo>-</mo>
+      <mi>η</mi>
+      <mo>(</mo><mn>1</mn><mo>-</mo><mfrac><mrow><mi>β</mi><mi>η</mi></mrow><mn>2</mn></mfrac><mo>)</mo>
+      <msup>
+        <mrow><mo>||</mo><mi>∇</mi><mi>L</mi><mo>(</mo><msub><mi>θ</mi><mi>t</mi></msub><mo>)</mo><mo>||</mo></mrow>
+        <mn>2</mn>
+      </msup>
+    </math>
+  </div>
+  <div class="box green">
+    <h3>关键解释</h3>
+    <p>学习率太小，下降慢。学习率太大，二次项会压过下降项，更新可能震荡甚至发散。曲率越大，可接受的学习率越小。</p>
+  </div>
+  <p>SGD 更复杂，因为 g 还有噪声。粗略地说，学习率同时控制两件事：</p>
+  <ul>
+    <li>向负梯度方向走多远。</li>
+    <li>把梯度噪声放大多少。</li>
+  </ul>
+  <div class="footer"><span>下降引理与稳定性</span><span>5 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>05 二次型例子</span><span>6</span></div>
+  <h2>为什么病态曲率会拖慢 SGD？</h2>
+  <p>看最经典的二次函数：</p>
+  <div class="formula tight">
+    <math display="block">
+      <mi>L</mi><mo>(</mo><mi>θ</mi><mo>)</mo>
+      <mo>=</mo>
+      <mfrac><mn>1</mn><mn>2</mn></mfrac>
+      <msup><mi>θ</mi><mi>T</mi></msup>
+      <mi>H</mi>
+      <mi>θ</mi>
+    </math>
+  </div>
+  <p>它的梯度是：</p>
+  <div class="formula tight">
+    <math display="block">
+      <mi>∇</mi><mi>L</mi><mo>(</mo><mi>θ</mi><mo>)</mo>
+      <mo>=</mo>
+      <mi>H</mi><mi>θ</mi>
+    </math>
+  </div>
+  <p>全量梯度下降变成一个线性系统：</p>
+  <div class="formula tight">
+    <math display="block">
+      <msub><mi>θ</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub>
+      <mo>=</mo>
+      <mo>(</mo><mi>I</mi><mo>-</mo><mi>η</mi><mi>H</mi><mo>)</mo>
+      <msub><mi>θ</mi><mi>t</mi></msub>
+    </math>
+  </div>
+  <div class="grid2">
+    <div>
+      <p>若 H 的特征值为 λ<sub>i</sub>，那么每个特征方向上的误差满足：</p>
+      <div class="formula tight smallmath">
+        <math display="block">
+          <msubsup><mi>e</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow><mrow><mo>(</mo><mi>i</mi><mo>)</mo></mrow></msubsup>
+          <mo>=</mo>
+          <mo>(</mo><mn>1</mn><mo>-</mo><mi>η</mi><msub><mi>λ</mi><mi>i</mi></msub><mo>)</mo>
+          <msubsup><mi>e</mi><mi>t</mi><mrow><mo>(</mo><mi>i</mi><mo>)</mo></mrow></msubsup>
+        </math>
+      </div>
+      <p>稳定性要求大致为：</p>
+      <div class="formula tight">
+        <math display="block">
+          <mn>0</mn><mo>&lt;</mo><mi>η</mi><mo>&lt;</mo>
+          <mfrac><mn>2</mn><msub><mi>λ</mi><mrow><mi>max</mi></mrow></msub></mfrac>
+        </math>
+      </div>
+    </div>
+    <div>
+      <svg class="contours" viewBox="0 0 320 250" role="img" aria-label="病态二次型等高线示意图">
+        <rect x="0" y="0" width="320" height="250" fill="#fbf8f1"/>
+        <ellipse cx="160" cy="125" rx="130" ry="28" fill="none" stroke="#9bb8c4" stroke-width="3"/>
+        <ellipse cx="160" cy="125" rx="98" ry="21" fill="none" stroke="#b7c8a9" stroke-width="3"/>
+        <ellipse cx="160" cy="125" rx="66" ry="14" fill="none" stroke="#d2b884" stroke-width="3"/>
+        <ellipse cx="160" cy="125" rx="35" ry="8" fill="none" stroke="#b45f2a" stroke-width="3"/>
+        <polyline points="40,76 110,156 79,98 148,148 122,112 166,132" fill="none" stroke="#1e3d59" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="40" cy="76" r="5" fill="#1e3d59"/>
+        <circle cx="166" cy="132" r="5" fill="#b45f2a"/>
+      </svg>
+      <div class="caption">狭长等高线会让梯度方向来回摆动。</div>
+    </div>
+  </div>
+  <div class="chalk">条件数 κ = λ<sub>max</sub> / λ<sub>min</sub> 越大，陡峭方向限制学习率，平坦方向却收敛很慢。</div>
+  <div class="footer"><span>曲率与条件数</span><span>6 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>06 batch size</span><span>7</span></div>
+  <h2>batch size 改变的是噪声，不只是速度</h2>
+  <p>若单样本梯度的协方差约为 Σ，那么 mini-batch 平均以后，梯度估计的协方差近似缩小为：</p>
+  <div class="formula">
+    <math display="block">
+      <mi>Cov</mi>
+      <mo>(</mo>
+      <msub><mi>g</mi><mi>t</mi></msub>
+      <mo>|</mo>
+      <msub><mi>θ</mi><mi>t</mi></msub>
+      <mo>)</mo>
+      <mo>≈</mo>
+      <mfrac>
+        <mi>Σ</mi>
+        <mi>B</mi>
+      </mfrac>
+    </math>
+  </div>
+  <p>所以 batch size B 增大时，梯度估计更稳定，但每一步的随机扰动也更小。</p>
+  <div class="grid2">
+    <div class="box blue">
+      <h3>小 batch</h3>
+      <ul>
+        <li>单步便宜。</li>
+        <li>噪声较大。</li>
+        <li>可能帮助跳出狭窄区域。</li>
+      </ul>
+    </div>
+    <div class="box amber">
+      <h3>大 batch</h3>
+      <ul>
+        <li>梯度更准。</li>
+        <li>并行效率更高。</li>
+        <li>学习率和 warmup 更敏感。</li>
+      </ul>
+    </div>
+  </div>
+  <p>把噪声拆分代入更新式，可以看到噪声被学习率 η 放大：</p>
+  <div class="formula smallmath">
+    <math display="block">
+      <mi>noise</mi>
+      <mspace width="0.3em"></mspace>
+      <mi>in</mi>
+      <mspace width="0.3em"></mspace>
+      <mi>update</mi>
+      <mo>≈</mo>
+      <mo>-</mo>
+      <mi>η</mi>
+      <msub><mi>ξ</mi><mi>t</mi></msub>
+      <mo>,</mo>
+      <mspace width="0.8em"></mspace>
+      <mi>Var</mi><mo>(</mo><mi>η</mi><msub><mi>ξ</mi><mi>t</mi></msub><mo>)</mo>
+      <mo>∝</mo>
+      <mfrac><msup><mi>η</mi><mn>2</mn></msup><mi>B</mi></mfrac>
+    </math>
+  </div>
+  <div class="chalk">这就是为什么学习率和 batch size 不能完全分开调。它们共同决定训练动力系统的温度。</div>
+  <div class="footer"><span>噪声尺度</span><span>7 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>07 SGD 的局限</span><span>8</span></div>
+  <h2>SGD 只做了两件事：方向和标量步长</h2>
+  <p>SGD 的更新可以读成一句话：</p>
+  <div class="formula">
+    <math display="block">
+      <mi>new</mi>
+      <mspace width="0.3em"></mspace>
+      <mi>parameter</mi>
+      <mo>=</mo>
+      <mi>old</mi>
+      <mspace width="0.3em"></mspace>
+      <mi>parameter</mi>
+      <mo>-</mo>
+      <mo>(</mo><mi>scalar</mi><mo>)</mo>
+      <mo>×</mo>
+      <mo>(</mo><mi>gradient</mi><mo>)</mo>
+    </math>
+  </div>
+  <p>它没有显式回答这些问题：</p>
+  <ol>
+    <li>不同坐标是否应该用不同步长？</li>
+    <li>过去许多步的梯度方向是否应该累积？</li>
+    <li>矩阵参数是否应该保留矩阵结构，而不是摊平成向量？</li>
+    <li>更新方向是否应该被归一化、白化或正交化？</li>
+  </ol>
+  <table class="summary-table">
+    <tr>
+      <th>问题</th>
+      <th>后续优化器的回答</th>
+    </tr>
+    <tr>
+      <td>单步梯度太吵</td>
+      <td>Momentum 使用时间平均。</td>
+    </tr>
+    <tr>
+      <td>不同坐标尺度不同</td>
+      <td>RMSProp、Adam 使用坐标级自适应缩放。</td>
+    </tr>
+    <tr>
+      <td>矩阵方向有结构</td>
+      <td>Shampoo、SOAP、Muon 等方法显式处理矩阵几何。</td>
+    </tr>
+  </table>
+  <div class="chalk">所以 SGD 是所有现代优化器的零点：后面的每个方法，都可以看成对 g<sub>t</sub> 或 η<sub>t</sub> 的改造。</div>
+  <div class="footer"><span>SGD 作为基线</span><span>8 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>08 通往 Momentum</span><span>9</span></div>
+  <h2>下一步：把单步梯度变成时间方向</h2>
+  <p>SGD 每一步只相信当前 mini-batch 的梯度。Momentum 的出发点很朴素：如果很多步的梯度都大致指向同一方向，那这个方向更可信。</p>
+  <p>Momentum 引入速度或动量变量：</p>
+  <div class="formula">
+    <math display="block">
+      <msub><mi>v</mi><mi>t</mi></msub>
+      <mo>=</mo>
+      <mi>μ</mi>
+      <msub><mi>v</mi><mrow><mi>t</mi><mo>-</mo><mn>1</mn></mrow></msub>
+      <mo>+</mo>
+      <msub><mi>g</mi><mi>t</mi></msub>
+    </math>
+  </div>
+  <div class="formula">
+    <math display="block">
+      <msub><mi>θ</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub>
+      <mo>=</mo>
+      <msub><mi>θ</mi><mi>t</mi></msub>
+      <mo>-</mo>
+      <mi>η</mi>
+      <msub><mi>v</mi><mi>t</mi></msub>
+    </math>
+  </div>
+  <div class="grid2">
+    <div class="box green">
+      <h3>在低噪声方向</h3>
+      <p>梯度反复同向，动量会累积，走得更快。</p>
+    </div>
+    <div class="box amber">
+      <h3>在震荡方向</h3>
+      <p>梯度来回变号，动量会互相抵消，震荡被削弱。</p>
+    </div>
+  </div>
+  <p>这一步非常重要，因为 Muon 也会先形成一个带动量的矩阵信号，再对这个矩阵信号做几何处理。</p>
+  <div class="formula smallmath">
+    <math display="block">
+      <mi>single</mi>
+      <mspace width="0.3em"></mspace>
+      <mi>gradient</mi>
+      <mspace width="0.5em"></mspace>
+      <mo>→</mo>
+      <mspace width="0.5em"></mspace>
+      <mi>momentum</mi>
+      <mspace width="0.3em"></mspace>
+      <mi>signal</mi>
+      <mspace width="0.5em"></mspace>
+      <mo>→</mo>
+      <mspace width="0.5em"></mspace>
+      <mi>structured</mi>
+      <mspace width="0.3em"></mspace>
+      <mi>update</mi>
+    </math>
+  </div>
+  <div class="footer"><span>Momentum 预告</span><span>9 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>09 通往 Muon</span><span>10</span></div>
+  <h2>从向量参数到矩阵参数</h2>
+  <p>神经网络里很多核心参数天然是矩阵，比如线性层权重：</p>
+  <div class="formula tight">
+    <math display="block">
+      <mi>W</mi><mo>∈</mo><msup><mi>R</mi><mrow><mi>m</mi><mo>×</mo><mi>n</mi></mrow></msup>
+    </math>
+  </div>
+  <p>如果只照搬 SGD，就是：</p>
+  <div class="formula">
+    <math display="block">
+      <msub><mi>W</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub>
+      <mo>=</mo>
+      <msub><mi>W</mi><mi>t</mi></msub>
+      <mo>-</mo>
+      <mi>η</mi>
+      <msub><mi>G</mi><mi>t</mi></msub>
+      <mo>,</mo>
+      <mspace width="0.6em"></mspace>
+      <msub><mi>G</mi><mi>t</mi></msub>
+      <mo>=</mo>
+      <msub><mi>∇</mi><mi>W</mi></msub>
+      <mi>L</mi><mo>(</mo><msub><mi>W</mi><mi>t</mi></msub><mo>)</mo>
+    </math>
+  </div>
+  <p>Muon 这条线的核心转弯是：先把梯度或动量看作矩阵，再对这个矩阵方向做正交化或极分解近似，得到结构化更新。</p>
+  <div class="matrix-path">
+    <div class="step">
+      <strong>1. 梯度矩阵</strong>
+      <p class="note">当前 batch 给出 G<sub>t</sub>。</p>
+    </div>
+    <div class="step">
+      <strong>2. 动量矩阵</strong>
+      <p class="note">累积成 M<sub>t</sub>，降低单步噪声。</p>
+    </div>
+    <div class="step">
+      <strong>3. 几何整理</strong>
+      <p class="note">把 M<sub>t</sub> 转成更规整的矩阵更新 U<sub>t</sub>。</p>
+    </div>
+  </div>
+  <div class="formula smallmath">
+    <math display="block">
+      <msub><mi>M</mi><mi>t</mi></msub>
+      <mo>=</mo>
+      <mi>μ</mi>
+      <msub><mi>M</mi><mrow><mi>t</mi><mo>-</mo><mn>1</mn></mrow></msub>
+      <mo>+</mo>
+      <msub><mi>G</mi><mi>t</mi></msub>
+      <mo>,</mo>
+      <mspace width="0.6em"></mspace>
+      <msub><mi>U</mi><mi>t</mi></msub>
+      <mo>≈</mo>
+      <mi>Orth</mi><mo>(</mo><msub><mi>M</mi><mi>t</mi></msub><mo>)</mo>
+    </math>
+  </div>
+  <div class="formula smallmath">
+    <math display="block">
+      <msub><mi>W</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub>
+      <mo>=</mo>
+      <msub><mi>W</mi><mi>t</mi></msub>
+      <mo>-</mo>
+      <mi>η</mi>
+      <msub><mi>U</mi><mi>t</mi></msub>
+    </math>
+  </div>
+  <p class="note">这只是预告，不是完整定义。下一讲先把 Momentum 讲透，再继续到自适应方法和矩阵预条件。</p>
+  <div class="footer"><span>矩阵视角</span><span>10 / 10</span></div>
+</section>
+
+</body>
+</html>

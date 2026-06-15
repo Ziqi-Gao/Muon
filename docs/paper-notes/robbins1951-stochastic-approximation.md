@@ -38,3 +38,12 @@ Background lineage source; do not overstate direct Muon influence without interm
 - What exact assumptions or benchmark settings support the headline claim?
 - Which graph edges need stronger source locators?
 - Does the method extend Muon, compare to Muon, or only share matrix/spectral machinery?
+
+## Phase 2 Evidence Audit
+
+- Search/cutoff date: 2026-06-14.
+- Registry status: `included` / `background`.
+- Evidence confidence: medium.
+- Evidence URLs: https://doi.org/10.1214/aoms/1177729586.
+- Audit note: Classical stochastic approximation root for SGD-style noisy updates.
+

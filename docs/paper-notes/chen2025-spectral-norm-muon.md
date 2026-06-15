@@ -38,3 +38,12 @@ Keep as a core Muon theory source; link to Muon and spectral-norm trust-region/c
 - Does the theory cover the common Newton-Schulz approximation or an idealized orthogonalization?
 - What role does decoupled weight decay play in the stated constrained problem?
 - Which later Muon variants inherit this interpretation?
+
+## Phase 2 Evidence Audit
+
+- Search/cutoff date: 2026-06-14.
+- Registry status: `included` / `core`.
+- Evidence confidence: medium.
+- Evidence URLs: https://arxiv.org/abs/2506.15054.
+- Audit note: Formalizes Muon under spectral norm constraints.
+

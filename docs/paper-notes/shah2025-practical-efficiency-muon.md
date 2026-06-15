@@ -38,3 +38,12 @@ Promote to graph as a core optimizer/Muon source with typed evidence edges.
 - What exact assumptions or benchmark settings support the headline claim?
 - Which graph edges need stronger source locators?
 - Does the method extend Muon, compare to Muon, or only share matrix/spectral machinery?
+
+## Phase 2 Evidence Audit
+
+- Search/cutoff date: 2026-06-14.
+- Registry status: `included` / `core`.
+- Evidence confidence: high.
+- Evidence URLs: https://arxiv.org/abs/2505.02222; https://www.essential.ai/research/infra.
+- Audit note: Studies Muon compute-time Pareto frontier, batch scaling, and muP transfer.
+
