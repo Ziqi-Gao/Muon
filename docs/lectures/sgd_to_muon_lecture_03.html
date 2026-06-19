@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>从 SGD 到 Muon 第三讲</title>
+  <style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #f4f1ea;
+    color: #17202a;
+    font-family: "Noto Serif SC", "Microsoft YaHei", "SimSun", serif;
+    letter-spacing: 0;
+  }
+  .page {
+    position: relative;
+    width: 210mm;
+    height: 297mm;
+    padding: 19mm 18mm 17mm;
+    background: #fffdf8;
+    page-break-after: always;
+    overflow: hidden;
+  }
+  .page:last-child { page-break-after: auto; }
+  .topline {
+    position: absolute;
+    left: 18mm;
+    right: 18mm;
+    top: 12mm;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #66717d;
+    font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    font-size: 9pt;
+  }
+  .footer {
+    position: absolute;
+    left: 18mm;
+    right: 18mm;
+    bottom: 9mm;
+    display: flex;
+    justify-content: space-between;
+    color: #7a828a;
+    font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    font-size: 9pt;
+    border-top: 1px solid #d9d4ca;
+    padding-top: 3mm;
+  }
+  h1, h2, h3 {
+    margin: 0;
+    font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+  h1 { font-size: 31pt; line-height: 1.15; color: #0f2638; }
+  h2 { font-size: 21.5pt; line-height: 1.2; color: #10344c; margin-bottom: 7mm; }
+  h3 { font-size: 13.2pt; color: #274c5e; margin: 4mm 0 2mm; }
+  p, li { font-size: 12pt; line-height: 1.68; }
+  p { margin: 0 0 4mm; }
+  ul, ol { margin: 2mm 0 4mm 7mm; padding-left: 5mm; }
+  li { margin: 1.35mm 0; }
+  .lead { font-size: 16pt; line-height: 1.62; color: #2f3c48; margin-top: 9mm; max-width: 158mm; }
+  .subtitle { font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif; font-size: 14pt; color: #6b4b20; margin-top: 6mm; }
+  .rule { width: 48mm; height: 1.4mm; background: #b45f2a; margin: 8mm 0 10mm; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 7mm; margin-top: 4mm; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4.5mm; margin-top: 4mm; }
+  .flow { display: grid; grid-template-columns: 1fr 9mm 1fr 9mm 1fr; align-items: center; gap: 2mm; margin-top: 5mm; }
+  .arrow { text-align: center; color: #8a5a24; font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif; font-size: 20pt; }
+  .box, .step {
+    border: 1px solid #d8cdbd;
+    background: #fbf8f1;
+    border-radius: 3mm;
+    padding: 4.6mm;
+  }
+  .step { min-height: 34mm; }
+  .box.blue, .step.blue { border-color: #bfd4dd; background: #f3f9fb; }
+  .box.amber, .step.amber { border-color: #dcc49b; background: #fff8e8; }
+  .box.green, .step.green { border-color: #b9d1c2; background: #f1faf4; }
+  .box h3, .step h3 { margin-top: 0; }
+  .box p, .box li, .step p, .step li { font-size: 10.9pt; line-height: 1.55; }
+  .formula {
+    margin: 4mm 0 5mm;
+    padding: 4mm 5mm;
+    background: #f7f7f2;
+    border: 1px solid #d7d7cf;
+    border-radius: 2mm;
+    text-align: center;
+    overflow: hidden;
+  }
+  .formula.tight { margin: 2.5mm 0 4mm; padding: 3mm 4mm; }
+  .formula.small { padding: 3.2mm 4mm; }
+  .umath {
+    font-family: "Cambria Math", "Cambria", "Noto Serif SC", "Microsoft YaHei", serif;
+    font-size: 18.2pt;
+    line-height: 1.25;
+  }
+  .formula.small .umath { font-size: 15.3pt; }
+  .note { color: #4c5964; font-size: 11pt; line-height: 1.6; }
+  .chalk {
+    font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    font-size: 10.8pt;
+    line-height: 1.58;
+    color: #263238;
+    border-left: 3px solid #b45f2a;
+    padding-left: 4mm;
+    margin-top: 4mm;
+  }
+  .summary-table { width: 100%; border-collapse: collapse; margin-top: 4mm; font-size: 10.6pt; }
+  .summary-table th, .summary-table td { border: 1px solid #d9d4ca; padding: 2.8mm; text-align: left; vertical-align: top; line-height: 1.48; }
+  .summary-table th { font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif; background: #eef4f5; color: #24485a; }
+  .svgbox { width: 100%; height: 54mm; margin: 2mm 0 1mm; }
+  .caption { color: #6d747b; font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif; font-size: 9.6pt; text-align: center; margin-top: 1mm; }
+  .compact p { margin-bottom: 2.5mm; }
+</style>
+</head>
+<body>
+<section class="page">
+  <div class="topline"><span>从 SGD 到 Muon</span><span>Lecture 03</span></div>
+  <h1>Adam：为什么不同坐标<br>不该用同一把尺子</h1>
+  <div class="subtitle">第三讲：自适应缩放、二阶矩与 AdamW</div>
+  <div class="rule"></div>
+  <p class="lead">Momentum 在时间上平均梯度，但仍然用一个全局学习率。Adam 的核心转弯是：每个坐标都维护自己的尺度估计，让噪声大或梯度大的坐标走得更谨慎。</p>
+  <div class="grid2" style="margin-top:14mm;">
+    <div class="box blue"><h3>本讲要回答</h3><ul><li>为什么只靠 Momentum 还不够？</li><li>AdaGrad、RMSProp、Adam 分别改了什么？</li><li>Adam 的一阶矩、二阶矩和偏差修正是什么？</li><li>AdamW 为什么要把 weight decay 解耦？</li></ul></div>
+    <div class="box amber"><h3>本讲先不做</h3><ul><li>不讨论矩阵正交化。</li><li>不把 Adam 的所有收敛反例展开。</li><li>不直接给 Muon 配方，先把坐标自适应讲清楚。</li></ul></div>
+  </div>
+  <p class="note" style="position:absolute; bottom:28mm; left:18mm;">这组讲义会固定符号：F 表示当前训练目标，训练时通常 F = L̂<sub>N</sub>；g<sub>t</sub> 是 mini-batch 梯度，m<sub>t</sub> 是一阶动量。</p>
+  <div class="footer"><span>中文讲义</span><span>2026-06-19</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>01 从 Momentum 出发</span><span>2</span></div>
+  <h2>Momentum 只在时间上平均，没有改坐标尺度</h2>
+  
+    <p>上一讲的 Momentum 更新可以写成：</p>
+    <div class="formula small"><span class="umath">m<sub>t</sub> = μm<sub>t-1</sub> + (1 - μ)g<sub>t</sub>, &nbsp; θ<sub>t+1</sub> = θ<sub>t</sub> - η<sub>t</sub>m<sub>t</sub></span></div>
+    <p>它让方向更平滑，但 η<sub>t</sub> 仍然是一个标量。也就是说，每个坐标都被同一个学习率缩放。</p>
+    <div class="grid2">
+      <div class="box blue"><h3>时间问题</h3><p>单步梯度太吵，Momentum 用过去的平均来稳定方向。</p></div>
+      <div class="box amber"><h3>坐标问题</h3><p>不同坐标的梯度尺度可能差很多，一个 η 很难同时适合所有坐标。</p></div>
+    </div>
+    <p>自适应优化器的入口就是把标量步长改成坐标级步长：</p>
+    <div class="formula tight"><span class="umath">θ<sub>t+1</sub> = θ<sub>t</sub> - η<sub>t</sub>P<sub>t</sub>m<sub>t</sub></span></div>
+    <div class="chalk">P<sub>t</sub> 是一个对角缩放矩阵时，就是坐标级自适应；P<sub>t</sub> 变成矩阵或张量结构时，就通往 Shampoo、SOAP 和 Muon 的邻近地带。</div>
+  
+  <div class="footer"><span>从时间平均到坐标缩放</span><span>2 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>02 对角预条件</span><span>3</span></div>
+  <h2>把每个坐标的步长分开</h2>
+  
+    <p>令第 j 个坐标的一阶动量为 m<sub>t,j</sub>。如果给每个坐标一个尺度 s<sub>t,j</sub>，更新就变成：</p>
+    <div class="formula small"><span class="umath">θ<sub>t+1,j</sub> = θ<sub>t,j</sub> - η<sub>t</sub> · m<sub>t,j</sub> / (s<sub>t,j</sub> + ε)</span></div>
+    <p>这里 s<sub>t,j</sub> 通常来自历史梯度平方。梯度平方大，说明这个坐标经常有大梯度或高噪声，于是步长会被压小。</p>
+    <svg class="svgbox" viewBox="0 0 560 180" role="img" aria-label="坐标级缩放示意图">
+      <rect width="560" height="180" fill="#fbf8f1"/>
+      <line x1="55" y1="145" x2="505" y2="145" stroke="#9aa5ad" stroke-width="2"/>
+      <line x1="55" y1="25" x2="55" y2="145" stroke="#9aa5ad" stroke-width="2"/>
+      <rect x="95" y="60" width="45" height="85" fill="#9bb8c4"/>
+      <rect x="185" y="95" width="45" height="50" fill="#b7c8a9"/>
+      <rect x="275" y="35" width="45" height="110" fill="#d2b884"/>
+      <rect x="365" y="118" width="45" height="27" fill="#b45f2a"/>
+      <text x="90" y="165" font-size="14" fill="#5d6871">坐标 1</text>
+      <text x="180" y="165" font-size="14" fill="#5d6871">坐标 2</text>
+      <text x="270" y="165" font-size="14" fill="#5d6871">坐标 3</text>
+      <text x="360" y="165" font-size="14" fill="#5d6871">坐标 4</text>
+      <text x="140" y="35" font-size="15" fill="#274c5e">历史梯度尺度不同</text>
+    </svg>
+    <div class="chalk">Adam 的“聪明”不是知道哪个方向一定更好，而是用历史数据估计每个坐标的天然单位。</div>
+  
+  <div class="footer"><span>坐标级学习率</span><span>3 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>03 AdaGrad</span><span>4</span></div>
+  <h2>AdaGrad：把所有过去的平方梯度都累加</h2>
+  
+    <p>AdaGrad 的尺度来自累计平方梯度：</p>
+    <div class="formula tight"><span class="umath">v<sub>t</sub> = v<sub>t-1</sub> + g<sub>t</sub> ⊙ g<sub>t</sub></span></div>
+    <div class="formula tight"><span class="umath">θ<sub>t+1</sub> = θ<sub>t</sub> - η · g<sub>t</sub> / (√v<sub>t</sub> + ε)</span></div>
+    <div class="grid2">
+      <div class="box green"><h3>优点</h3><p>出现频繁、大梯度的坐标会自动变小步长；稀疏特征场景很有吸引力。</p></div>
+      <div class="box amber"><h3>问题</h3><p>v<sub>t</sub> 只增不减，训练后期步长可能衰减得太厉害。</p></div>
+    </div>
+    <p>AdaGrad 给了一个重要思想：学习率不必全局共享，可以从梯度历史里估计。</p>
+    <div class="chalk">如果 Momentum 是“过去方向的平均”，AdaGrad 就是“过去尺度的记账”。</div>
+  
+  <div class="footer"><span>累计平方梯度</span><span>4 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>04 RMSProp</span><span>5</span></div>
+  <h2>RMSProp：只记最近一段时间的平方梯度</h2>
+  
+    <p>RMSProp 把 AdaGrad 的累计和改成指数移动平均：</p>
+    <div class="formula small"><span class="umath">v<sub>t</sub> = ρv<sub>t-1</sub> + (1 - ρ)(g<sub>t</sub> ⊙ g<sub>t</sub>)</span></div>
+    <div class="formula tight"><span class="umath">θ<sub>t+1</sub> = θ<sub>t</sub> - η · g<sub>t</sub> / (√v<sub>t</sub> + ε)</span></div>
+    <p>这样 v<sub>t</sub> 不再只增不减，而是主要反映最近的梯度尺度。</p>
+    <div class="grid2">
+      <div class="box blue"><h3>ρ 接近 0</h3><p>尺度估计反应快，但更吵。</p></div>
+      <div class="box green"><h3>ρ 接近 1</h3><p>尺度估计更平滑，但变化慢。</p></div>
+    </div>
+    <p>RMSProp 还没有一阶动量 m<sub>t</sub> 的完整偏差修正，但它已经把“二阶矩估计”这条线打开了。</p>
+    <div class="chalk">RMSProp 可以理解为：用最近的均方梯度估计每个坐标的单位。</div>
+  
+  <div class="footer"><span>指数平均的二阶矩</span><span>5 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>05 Adam</span><span>6</span></div>
+  <h2>Adam = Momentum + RMSProp + 偏差修正</h2>
+  
+    <p>Adam 同时维护一阶矩和二阶矩：</p>
+    <div class="formula tight"><span class="umath">m<sub>t</sub> = β<sub>1</sub>m<sub>t-1</sub> + (1 - β<sub>1</sub>)g<sub>t</sub></span></div>
+    <div class="formula small"><span class="umath">v<sub>t</sub> = β<sub>2</sub>v<sub>t-1</sub> + (1 - β<sub>2</sub>)(g<sub>t</sub> ⊙ g<sub>t</sub>)</span></div>
+    <p>由于 m<sub>t</sub> 和 v<sub>t</sub> 初始为 0，前几步会偏小，因此 Adam 做偏差修正：</p>
+    <div class="formula small"><span class="umath">m̂<sub>t</sub> = m<sub>t</sub> / (1 - β<sub>1</sub><sup>t+1</sup>), &nbsp; v̂<sub>t</sub> = v<sub>t</sub> / (1 - β<sub>2</sub><sup>t+1</sup>)</span></div>
+    <div class="formula small"><span class="umath">θ<sub>t+1</sub> = θ<sub>t</sub> - η · m̂<sub>t</sub> / (√v̂<sub>t</sub> + ε)</span></div>
+    <div class="chalk">一阶矩给方向，二阶矩给坐标尺度。Adam 的核心就是这两个估计的组合。</div>
+  
+  <div class="footer"><span>Adam 更新式</span><span>6 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>06 Adam 的直觉</span><span>7</span></div>
+  <h2>为什么除以 √v̂<sub>t</sub> 有用？</h2>
+  
+    <p>如果某个坐标的梯度长期很大，那么 v̂<sub>t,j</sub> 会大，这个坐标的有效步长会变小：</p>
+    <div class="formula tight"><span class="umath">effective step<sub>j</sub> ≈ η / (√v̂<sub>t,j</sub> + ε)</span></div>
+    <div class="grid3">
+      <div class="step blue"><h3>方向</h3><p>m̂<sub>t</sub> 决定朝哪里走。</p></div>
+      <div class="step green"><h3>单位</h3><p>√v̂<sub>t</sub> 决定每个坐标的自然尺度。</p></div>
+      <div class="step amber"><h3>稳定</h3><p>ε 防止除以太小的数。</p></div>
+    </div>
+    <p>从这个角度看，Adam 并不只是“Momentum 更复杂版”。它改变了参数空间里的度量：同样大小的 m̂，在不同坐标上会产生不同大小的参数更新。</p>
+    <div class="chalk">Adam 对“坐标轴”很敏感：它假设逐坐标缩放是有意义的。这正是它和矩阵几何方法的分水岭。</div>
+  
+  <div class="footer"><span>坐标尺度</span><span>7 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>07 AdamW</span><span>8</span></div>
+  <h2>AdamW：不要把 weight decay 混进自适应梯度</h2>
+  
+    <p>如果把 L2 正则直接加进梯度，Adam 会把 θ 也放进自适应分母里，导致 weight decay 和坐标缩放纠缠。</p>
+    <p>AdamW 的做法是把权重衰减从梯度更新里解耦：</p>
+    <div class="formula small"><span class="umath">θ<sub>t+1</sub> = (1 - ηλ)θ<sub>t</sub> - η · m̂<sub>t</sub> / (√v̂<sub>t</sub> + ε)</span></div>
+    <div class="grid2">
+      <div class="box blue"><h3>Adam</h3><p>梯度项和正则项可能一起被自适应分母缩放。</p></div>
+      <div class="box green"><h3>AdamW</h3><p>先按比例收缩权重，再做自适应梯度更新。含义更清楚，也更常用。</p></div>
+    </div>
+    <div class="chalk">后面讲 Muon 实践时也会遇到同一件事：weight decay 最好作为独立的参数收缩来理解。</div>
+  
+  <div class="footer"><span>解耦权重衰减</span><span>8 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>08 Adam 的边界</span><span>9</span></div>
+  <h2>Adam 仍然只看坐标，不理解矩阵结构</h2>
+  
+    <p>Adam 的预条件器是对角的：</p>
+    <div class="formula tight"><span class="umath">P<sub>t</sub> = diag(1 / (√v̂<sub>t</sub> + ε))</span></div>
+    <p>这意味着它能区分不同坐标，却不能直接表达“行空间”和“列空间”的耦合关系。</p>
+    <table class="summary-table">
+      <tr><th>问题</th><th>Adam 的回答</th><th>还缺什么</th></tr>
+      <tr><td>单步梯度太吵</td><td>一阶矩 m<sub>t</sub></td><td>已经部分解决</td></tr>
+      <tr><td>坐标尺度不同</td><td>二阶矩 v<sub>t</sub></td><td>已经部分解决</td></tr>
+      <tr><td>矩阵方向低秩或病态</td><td>逐坐标缩放</td><td>缺少矩阵级几何处理</td></tr>
+    </table>
+    <div class="chalk">这就是 lecture04 的入口：如果参数天然是矩阵，是否应该用矩阵方式缩放梯度？</div>
+  
+  <div class="footer"><span>对角预条件的边界</span><span>9 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>09 小结</span><span>10</span></div>
+  <h2>本讲你应该带走的四句话</h2>
+  
+    <ol>
+      <li>AdaGrad 证明了“每个坐标一个学习率”是合理的。</li>
+      <li>RMSProp 把历史平方梯度改成近期平均，避免步长只降不升。</li>
+      <li>Adam 用一阶矩给方向，用二阶矩给坐标尺度。</li>
+      <li>AdamW 把 weight decay 从自适应梯度更新里解耦出来。</li>
+    </ol>
+    <div class="formula tight"><span class="umath">Adam: &nbsp; direction = m̂<sub>t</sub>, &nbsp; scale = 1 / (√v̂<sub>t</sub> + ε)</span></div>
+    <div class="grid2">
+      <div class="box blue"><h3>课后自检</h3><ul><li>能否说清 m<sub>t</sub> 和 v<sub>t</sub> 分别估计什么？</li><li>能否解释 AdamW 为什么不是小修小补？</li></ul></div>
+      <div class="box amber"><h3>下一讲预告</h3><p>我们会把对角缩放升级成矩阵缩放：Shampoo、SOAP、极分解，以及它们怎样把路铺到 Muon。</p></div>
+    </div>
+    <div class="chalk">lecture02 解决时间平均，lecture03 解决坐标尺度。接下来开始进入矩阵几何。</div>
+  
+  <div class="footer"><span>下一讲：矩阵预条件</span><span>10 / 10</span></div>
+</section>
+</body>
+</html>

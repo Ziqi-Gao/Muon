@@ -1,0 +1,927 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>从 SGD 到 Muon 第二讲</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #f4f1ea;
+      color: #17202a;
+      font-family: "Noto Serif SC", "Microsoft YaHei", "SimSun", serif;
+      letter-spacing: 0;
+    }
+
+    .page {
+      position: relative;
+      width: 210mm;
+      height: 297mm;
+      padding: 19mm 18mm 17mm;
+      background: #fffdf8;
+      page-break-after: always;
+      overflow: hidden;
+    }
+
+    .page:last-child {
+      page-break-after: auto;
+    }
+
+    .topline {
+      position: absolute;
+      left: 18mm;
+      right: 18mm;
+      top: 12mm;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #66717d;
+      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      font-size: 9pt;
+    }
+
+    .footer {
+      position: absolute;
+      left: 18mm;
+      right: 18mm;
+      bottom: 9mm;
+      display: flex;
+      justify-content: space-between;
+      color: #7a828a;
+      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      font-size: 9pt;
+      border-top: 1px solid #d9d4ca;
+      padding-top: 3mm;
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      font-size: 31pt;
+      line-height: 1.15;
+      color: #0f2638;
+    }
+
+    h2 {
+      font-size: 21.5pt;
+      line-height: 1.2;
+      color: #10344c;
+      margin-bottom: 7mm;
+    }
+
+    h3 {
+      font-size: 13.5pt;
+      color: #274c5e;
+      margin: 4mm 0 2mm;
+    }
+
+    p, li {
+      font-size: 12.1pt;
+      line-height: 1.72;
+    }
+
+    p {
+      margin: 0 0 4mm;
+    }
+
+    ul, ol {
+      margin: 2mm 0 4mm 7mm;
+      padding-left: 5mm;
+    }
+
+    li {
+      margin: 1.4mm 0;
+    }
+
+    .lead {
+      font-size: 16pt;
+      line-height: 1.65;
+      color: #2f3c48;
+      margin-top: 9mm;
+      max-width: 158mm;
+    }
+
+    .subtitle {
+      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      font-size: 14pt;
+      color: #6b4b20;
+      margin-top: 6mm;
+    }
+
+    .rule {
+      width: 48mm;
+      height: 1.4mm;
+      background: #b45f2a;
+      margin: 8mm 0 10mm;
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7mm;
+      margin-top: 4mm;
+    }
+
+    .grid3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 4.5mm;
+      margin-top: 5mm;
+    }
+
+    .box {
+      border: 1px solid #d8cdbd;
+      background: #fbf8f1;
+      border-radius: 3mm;
+      padding: 5mm;
+    }
+
+    .box.blue {
+      border-color: #bfd4dd;
+      background: #f3f9fb;
+    }
+
+    .box.amber {
+      border-color: #dcc49b;
+      background: #fff8e8;
+    }
+
+    .box.green {
+      border-color: #b9d1c2;
+      background: #f1faf4;
+    }
+
+    .box h3 {
+      margin-top: 0;
+    }
+
+    .box p,
+    .box li {
+      font-size: 11pt;
+      line-height: 1.58;
+    }
+
+    .legend {
+      margin: -1mm 0 4mm;
+      padding: 3.2mm 4.5mm;
+    }
+
+    .legend ul {
+      columns: 2;
+      column-gap: 7mm;
+      margin: 1mm 0 0 4mm;
+      padding-left: 4mm;
+    }
+
+    .legend li {
+      break-inside: avoid;
+      font-size: 10.2pt;
+      line-height: 1.48;
+      margin: 0.8mm 0;
+    }
+
+    .formula {
+      margin: 4mm 0 6mm;
+      padding: 4mm 5mm;
+      background: #f7f7f2;
+      border: 1px solid #d7d7cf;
+      border-radius: 2mm;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .formula.tight {
+      margin: 2.5mm 0 4mm;
+      padding: 3mm 4mm;
+    }
+
+    math {
+      font-family: "Cambria Math", "Cambria", "Noto Serif SC", "Microsoft YaHei", serif;
+      font-size: 18.5pt;
+      line-height: 1.25;
+    }
+
+    .unicode-math {
+      font-family: "Cambria Math", "Cambria", "Noto Serif SC", "Microsoft YaHei", serif;
+      font-size: 18.5pt;
+      line-height: 1.25;
+    }
+
+    .smallmath math {
+      font-size: 15.8pt;
+    }
+
+    .note {
+      color: #4c5964;
+      font-size: 11.1pt;
+      line-height: 1.62;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 1.2mm 2.7mm;
+      border-radius: 99px;
+      background: #e7eef2;
+      color: #274c5e;
+      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      font-size: 9.5pt;
+      margin-right: 2mm;
+    }
+
+    .chalk {
+      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      font-size: 10.8pt;
+      line-height: 1.6;
+      color: #263238;
+      border-left: 3px solid #b45f2a;
+      padding-left: 4mm;
+      margin-top: 4mm;
+    }
+
+    .pseudo {
+      font-family: Consolas, "Noto Sans Mono CJK SC", monospace;
+      font-size: 10.6pt;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      background: #101820;
+      color: #edf5f5;
+      border-radius: 3mm;
+      padding: 5mm;
+      margin: 4mm 0;
+    }
+
+    .step {
+      border-radius: 3mm;
+      padding: 4mm;
+      min-height: 36mm;
+      background: #f8f5ee;
+      border: 1px solid #d7cab7;
+    }
+
+    .step strong {
+      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      color: #0f3b52;
+    }
+
+    .caption {
+      color: #6d747b;
+      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      font-size: 9.7pt;
+      text-align: center;
+      margin-top: 1mm;
+    }
+
+    .summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 4mm;
+      font-size: 10.8pt;
+    }
+
+    .summary-table th,
+    .summary-table td {
+      border: 1px solid #d9d4ca;
+      padding: 3mm;
+      text-align: left;
+      vertical-align: top;
+      line-height: 1.5;
+    }
+
+    .summary-table th {
+      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      background: #eef4f5;
+      color: #24485a;
+    }
+
+    .weights {
+      width: 100%;
+      height: 42mm;
+      margin: 2mm 0;
+    }
+
+    .valley {
+      width: 100%;
+      height: 82mm;
+      margin-top: 1mm;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: 1fr 10mm 1fr 10mm 1fr;
+      align-items: center;
+      gap: 2mm;
+      margin-top: 6mm;
+    }
+
+    .arrow {
+      text-align: center;
+      color: #8a5a24;
+      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      font-size: 22pt;
+    }
+  </style>
+</head>
+<body>
+
+<section class="page">
+  <div class="topline"><span>从 SGD 到 Muon</span><span>Lecture 02</span></div>
+  <h1>Momentum：把单步梯度<br>变成时间方向</h1>
+  <div class="subtitle">第二讲：指数平均、噪声过滤与惯性</div>
+  <div class="rule"></div>
+  <p class="lead">上一讲我们把 SGD 看成带噪声的梯度下降。本讲只加一个新变量：动量。它的作用不是改变参数空间的坐标尺度，而是在时间上整理梯度信号。</p>
+  <div class="grid2" style="margin-top:14mm;">
+    <div class="box blue">
+      <h3>本讲要回答</h3>
+      <ul>
+        <li>Momentum 为什么是梯度的指数移动平均？</li>
+        <li>它如何降低 mini-batch 梯度噪声？</li>
+        <li>为什么它能减弱狭长谷里的来回震荡？</li>
+        <li>它和 Adam、Muon 的关系在哪里？</li>
+      </ul>
+    </div>
+    <div class="box amber">
+      <h3>本讲先不做</h3>
+      <ul>
+        <li>不展开 Adam 的二阶矩缩放。</li>
+        <li>不证明 Muon 的正交化性质。</li>
+        <li>先把“时间平均”这件事讲透。</li>
+      </ul>
+    </div>
+  </div>
+  <p class="note" style="position:absolute; bottom:28mm; left:18mm;">读法建议：把 μ 当成“记忆长度”的旋钮，把 η 当成“走多远”的旋钮。它们会一起决定训练的稳定性。</p>
+  <div class="footer"><span>中文讲义</span><span>2026-06-19</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>01 回到上一讲</span><span>2</span></div>
+  <h2>SGD 的问题不是只有随机，它还太健忘</h2>
+  <p>本讲统一用 F 表示当前正在优化或分析的目标。训练集上通常就是经验风险：</p>
+  <div class="formula tight">
+    <math display="block">
+      <mi>F</mi>
+      <mo>=</mo>
+      <msub>
+        <mover accent="true"><mi>L</mi><mo>^</mo></mover>
+        <mi>N</mi>
+      </msub>
+    </math>
+  </div>
+  <p>上一讲我们把 mini-batch 梯度写成：</p>
+  <div class="formula">
+    <math display="block">
+      <msub><mi>g</mi><mi>t</mi></msub>
+      <mo>=</mo>
+      <mi>∇</mi><mi>F</mi><mo>(</mo><msub><mi>θ</mi><mi>t</mi></msub><mo>)</mo>
+      <mo>+</mo>
+      <msub><mi>ξ</mi><mi>t</mi></msub>
+      <mo>,</mo>
+      <mspace width="0.6em"></mspace>
+      <mi>E</mi><mo>[</mo><msub><mi>ξ</mi><mi>t</mi></msub><mo>|</mo><msub><mi>θ</mi><mi>t</mi></msub><mo>]</mo>
+      <mo>=</mo>
+      <mn>0</mn>
+    </math>
+  </div>
+  <p>SGD 每一步只用当前这个 g<sub>t</sub>：</p>
+  <div class="formula tight">
+    <math display="block">
+      <msub><mi>θ</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub>
+      <mo>=</mo>
+      <msub><mi>θ</mi><mi>t</mi></msub>
+      <mo>-</mo>
+      <msub><mi>η</mi><mi>t</mi></msub>
+      <msub><mi>g</mi><mi>t</mi></msub>
+    </math>
+  </div>
+  <div class="grid2">
+    <div class="box blue">
+      <h3>如果方向连续同向</h3>
+      <p>单步梯度没有利用“很多步都在说同一件事”这个证据。</p>
+    </div>
+    <div class="box amber">
+      <h3>如果方向来回变号</h3>
+      <p>单步梯度会直接跟着震荡，尤其是在大曲率方向。</p>
+    </div>
+  </div>
+  <div class="chalk">Momentum 的想法很朴素：不要只听当前 mini-batch，要听最近一段时间的平均意见。</div>
+  <div class="footer"><span>SGD 的记忆长度为 1</span><span>2 / 12</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>02 定义 Momentum</span><span>3</span></div>
+  <h2>动量变量 m<sub>t</sub> 是梯度的时间平均</h2>
+  <p>本讲采用归一化的指数移动平均写法。初始动量取 0，并定义：</p>
+  <div class="formula">
+    <math display="block">
+      <msub><mi>m</mi><mi>t</mi></msub>
+      <mo>=</mo>
+      <mi>μ</mi>
+      <msub><mi>m</mi><mrow><mi>t</mi><mo>-</mo><mn>1</mn></mrow></msub>
+      <mo>+</mo>
+      <mo>(</mo><mn>1</mn><mo>-</mo><mi>μ</mi><mo>)</mo>
+      <msub><mi>g</mi><mi>t</mi></msub>
+    </math>
+  </div>
+  <div class="formula">
+    <math display="block">
+      <msub><mi>θ</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub>
+      <mo>=</mo>
+      <msub><mi>θ</mi><mi>t</mi></msub>
+      <mo>-</mo>
+      <msub><mi>η</mi><mi>t</mi></msub>
+      <msub><mi>m</mi><mi>t</mi></msub>
+    </math>
+  </div>
+  <div class="box blue legend">
+    <h3>符号说明</h3>
+    <ul>
+      <li><strong>g<sub>t</sub></strong>：第 t 步的 mini-batch 梯度。</li>
+      <li><strong>m<sub>t</sub></strong>：到第 t 步为止的动量信号。</li>
+      <li><strong>μ</strong>：动量系数，满足 0 ≤ μ &lt; 1。</li>
+      <li><strong>η<sub>t</sub></strong>：学习率，控制沿 m<sub>t</sub> 走多远。</li>
+      <li><strong>θ<sub>t</sub></strong>：第 t 步更新前的参数。</li>
+      <li><strong>F</strong>：当前分析目标，训练时通常为 L̂<sub>N</sub>。</li>
+    </ul>
+  </div>
+  <div class="box amber">
+    <h3>和代码里的写法有什么区别？</h3>
+    <p>很多 SGD momentum 实现写成 v<sub>t</sub> = μv<sub>t-1</sub> + g<sub>t</sub>。这和这里的 m<sub>t</sub> 只差一个大约为 1 - μ 的尺度，通常可以吸收到学习率里。本讲用 m<sub>t</sub> 是为了让“平均”这件事更清楚。</p>
+  </div>
+  <div class="footer"><span>Momentum 基本更新</span><span>3 / 12</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>03 展开递推</span><span>4</span></div>
+  <h2>μ 决定我们记住多远的过去</h2>
+  <p>把 m<sub>t</sub> 的递推展开，可以看到它不是玄学变量，而是一个加权平均：</p>
+  <div class="formula">
+    <math display="block">
+      <msub><mi>m</mi><mi>t</mi></msub>
+      <mo>=</mo>
+      <mo>(</mo><mn>1</mn><mo>-</mo><mi>μ</mi><mo>)</mo>
+      <munderover>
+        <mo>∑</mo>
+        <mrow><mi>k</mi><mo>=</mo><mn>0</mn></mrow>
+        <mi>t</mi>
+      </munderover>
+      <msup><mi>μ</mi><mrow><mi>t</mi><mo>-</mo><mi>k</mi></mrow></msup>
+      <msub><mi>g</mi><mi>k</mi></msub>
+    </math>
+  </div>
+  <p>离现在越近的梯度权重越大，越久以前的梯度权重按 μ 的幂次衰减。</p>
+  <svg class="weights" viewBox="0 0 560 145" role="img" aria-label="指数衰减权重示意图">
+    <rect x="0" y="0" width="560" height="145" fill="#fbf8f1"/>
+    <line x1="40" y1="118" x2="525" y2="118" stroke="#9aa5ad" stroke-width="2"/>
+    <line x1="40" y1="15" x2="40" y2="118" stroke="#9aa5ad" stroke-width="2"/>
+    <polyline points="45,24 95,43 145,58 195,71 245,82 295,91 345,99 395,105 445,111 495,115" fill="none" stroke="#b45f2a" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="45" cy="24" r="4" fill="#b45f2a"/>
+    <circle cx="145" cy="58" r="4" fill="#b45f2a"/>
+    <circle cx="245" cy="82" r="4" fill="#b45f2a"/>
+    <circle cx="345" cy="99" r="4" fill="#b45f2a"/>
+    <circle cx="445" cy="111" r="4" fill="#b45f2a"/>
+    <text x="35" y="136" font-size="14" fill="#5d6871">现在</text>
+    <text x="455" y="136" font-size="14" fill="#5d6871">更早以前</text>
+    <text x="72" y="28" font-size="14" fill="#274c5e">权重最高</text>
+    <text x="325" y="76" font-size="14" fill="#274c5e">指数衰减</text>
+  </svg>
+  <div class="grid3">
+    <div class="step">
+      <strong>μ = 0</strong>
+      <p class="note">m<sub>t</sub> = g<sub>t</sub>，退化回普通 SGD。</p>
+    </div>
+    <div class="step">
+      <strong>μ = 0.9</strong>
+      <p class="note">有效记忆长度约为 10 步。</p>
+    </div>
+    <div class="step">
+      <strong>μ = 0.99</strong>
+      <p class="note">有效记忆长度约为 100 步，但反应更慢。</p>
+    </div>
+  </div>
+  <div class="chalk">一个很实用的近似：有效记忆长度约为 1 / (1 - μ)。μ 越接近 1，平均越平滑，滞后也越明显。</div>
+  <div class="footer"><span>指数移动平均</span><span>4 / 12</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>04 噪声过滤</span><span>5</span></div>
+  <h2>Momentum 为什么能让梯度更稳？</h2>
+  <p>假设在一小段时间内真实梯度变化不大，并且 mini-batch 噪声近似独立：</p>
+  <div class="formula smallmath">
+    <math display="block">
+      <msub><mi>g</mi><mi>t</mi></msub>
+      <mo>=</mo>
+      <mi>h</mi>
+      <mo>+</mo>
+      <msub><mi>ξ</mi><mi>t</mi></msub>
+      <mo>,</mo>
+      <mspace width="0.6em"></mspace>
+      <mi>h</mi><mo>=</mo><mi>∇</mi><mi>F</mi><mo>(</mo><mi>θ</mi><mo>)</mo>
+      <mo>,</mo>
+      <mspace width="0.6em"></mspace>
+      <mi>Cov</mi><mo>(</mo><msub><mi>ξ</mi><mi>t</mi></msub><mo>)</mo>
+      <mo>≈</mo>
+      <mfrac><mi>Σ</mi><mi>B</mi></mfrac>
+    </math>
+  </div>
+  <p>那么动量平均后的噪声协方差近似为：</p>
+  <div class="formula">
+    <math display="block">
+      <mi>Cov</mi><mo>(</mo><msub><mi>m</mi><mi>t</mi></msub><mo>)</mo>
+      <mo>≈</mo>
+      <mfrac>
+        <mrow><mn>1</mn><mo>-</mo><mi>μ</mi></mrow>
+        <mrow><mn>1</mn><mo>+</mo><mi>μ</mi></mrow>
+      </mfrac>
+      <mfrac><mi>Σ</mi><mi>B</mi></mfrac>
+    </math>
+  </div>
+  <div class="grid2">
+    <div class="box green">
+      <h3>例子：μ = 0.9</h3>
+      <p>方差约乘以 1 / 19，标准差约乘以 0.23。也就是说，动量信号比单步梯度平滑很多。</p>
+    </div>
+    <div class="box amber">
+      <h3>但有代价</h3>
+      <p>如果真实梯度方向突然改变，m<sub>t</sub> 还带着旧方向的记忆，会产生滞后甚至过冲。</p>
+    </div>
+  </div>
+  <p>这正是 Momentum 的核心取舍：用反应速度换取噪声过滤。</p>
+  <div class="chalk">从信号处理角度看，Momentum 是一个低通滤波器：保留慢变化的方向，削弱高频抖动。</div>
+  <div class="footer"><span>方差缩小与滞后</span><span>5 / 12</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>05 偏差修正</span><span>6</span></div>
+  <h2>为什么训练刚开始时动量会偏小？</h2>
+  <p>因为初始动量取 0，所以最开始的平均里混入了“过去全是 0”的假设。如果真实梯度近似不变，记为 h，那么：</p>
+  <div class="formula">
+    <math display="block">
+      <mi>E</mi><mo>[</mo><msub><mi>m</mi><mi>t</mi></msub><mo>]</mo>
+      <mo>≈</mo>
+      <mo>(</mo><mn>1</mn><mo>-</mo><msup><mi>μ</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msup><mo>)</mo>
+      <mi>h</mi>
+    </math>
+  </div>
+  <p>因此可以定义一个偏差修正后的动量：</p>
+  <div class="formula">
+    <math display="block">
+      <msub>
+        <mover accent="true"><mi>m</mi><mo>^</mo></mover>
+        <mi>t</mi>
+      </msub>
+      <mo>=</mo>
+      <mfrac>
+        <msub><mi>m</mi><mi>t</mi></msub>
+        <mrow><mn>1</mn><mo>-</mo><msup><mi>μ</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msup></mrow>
+      </mfrac>
+    </math>
+  </div>
+  <div class="grid2">
+    <div class="box blue">
+      <h3>SGD Momentum</h3>
+      <p>经典实现通常不显式做偏差修正，而是通过 warmup 和学习率安排缓和开头阶段。</p>
+    </div>
+    <div class="box green">
+      <h3>Adam</h3>
+      <p>Adam 会对一阶矩和二阶矩都做偏差修正。这就是下一讲会自然出现的公式。</p>
+    </div>
+  </div>
+  <div class="box amber">
+    <h3>实现提醒</h3>
+    <p>如果使用偏差修正，就先把 m<sub>t</sub> 除以 1 - μ<sup>t+1</sup>，再用于参数更新。经典 SGD Momentum 通常不显式写这一步。</p>
+  </div>
+  <div class="chalk">偏差修正回答的是“开头几步平均值偏小”的问题，不是 Momentum 的主要思想。主要思想仍然是时间平均。</div>
+  <div class="footer"><span>初始偏差</span><span>6 / 12</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>06 二次型动力学</span><span>7</span></div>
+  <h2>Momentum 把一阶递推变成二阶递推</h2>
+  <p>看一维二次目标。这里没有随机噪声，只观察确定性动力学：</p>
+  <div class="formula tight">
+    <math display="block">
+      <mi>F</mi><mo>(</mo><mi>θ</mi><mo>)</mo>
+      <mo>=</mo>
+      <mfrac><mn>1</mn><mn>2</mn></mfrac>
+      <mi>λ</mi>
+      <msup><mi>θ</mi><mn>2</mn></msup>
+      <mo>,</mo>
+      <mspace width="0.6em"></mspace>
+      <msub><mi>g</mi><mi>t</mi></msub>
+      <mo>=</mo>
+      <mi>λ</mi><msub><mi>θ</mi><mi>t</mi></msub>
+    </math>
+  </div>
+  <p>代入归一化 Momentum：</p>
+  <div class="formula smallmath">
+    <math display="block">
+      <msub><mi>m</mi><mi>t</mi></msub>
+      <mo>=</mo>
+      <mi>μ</mi><msub><mi>m</mi><mrow><mi>t</mi><mo>-</mo><mn>1</mn></mrow></msub>
+      <mo>+</mo>
+      <mo>(</mo><mn>1</mn><mo>-</mo><mi>μ</mi><mo>)</mo>
+      <mi>λ</mi><msub><mi>θ</mi><mi>t</mi></msub>
+      <mo>,</mo>
+      <mspace width="0.5em"></mspace>
+      <msub><mi>θ</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub>
+      <mo>=</mo>
+      <msub><mi>θ</mi><mi>t</mi></msub>
+      <mo>-</mo>
+      <mi>η</mi><msub><mi>m</mi><mi>t</mi></msub>
+    </math>
+  </div>
+  <p>消去 m<sub>t</sub> 后，得到关于 θ 的二阶递推：</p>
+  <div class="formula">
+    <math display="block">
+      <msub><mi>θ</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub>
+      <mo>=</mo>
+      <mo>(</mo><mn>1</mn><mo>+</mo><mi>μ</mi><mo>-</mo><mi>η</mi><mo>(</mo><mn>1</mn><mo>-</mo><mi>μ</mi><mo>)</mo><mi>λ</mi><mo>)</mo>
+      <msub><mi>θ</mi><mi>t</mi></msub>
+      <mo>-</mo>
+      <mi>μ</mi>
+      <msub><mi>θ</mi><mrow><mi>t</mi><mo>-</mo><mn>1</mn></mrow></msub>
+    </math>
+  </div>
+  <p>对应的特征方程是：</p>
+  <div class="formula tight smallmath">
+    <math display="block">
+      <msup><mi>r</mi><mn>2</mn></msup>
+      <mo>-</mo>
+      <mo>(</mo><mn>1</mn><mo>+</mo><mi>μ</mi><mo>-</mo><mi>η</mi><mo>(</mo><mn>1</mn><mo>-</mo><mi>μ</mi><mo>)</mo><mi>λ</mi><mo>)</mo>
+      <mi>r</mi>
+      <mo>+</mo>
+      <mi>μ</mi>
+      <mo>=</mo>
+      <mn>0</mn>
+    </math>
+  </div>
+  <div class="chalk">SGD 像一阶系统，只看当前位置的斜率。Momentum 像带惯性的二阶系统，会同时记住当前位置和上一段运动趋势。</div>
+  <div class="footer"><span>一维二次型</span><span>7 / 12</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>07 狭长谷</span><span>8</span></div>
+  <h2>为什么 Momentum 能减弱来回震荡？</h2>
+  <p>在病态二次型里，不同方向的曲率差很多。陡峭方向的梯度容易来回变号，平坦方向的梯度更容易连续同向。</p>
+  <div class="grid2">
+    <div>
+      <svg class="valley" viewBox="0 0 320 300" role="img" aria-label="SGD 和 Momentum 在狭长谷里的路径">
+        <rect x="0" y="0" width="320" height="300" fill="#fbf8f1"/>
+        <ellipse cx="165" cy="150" rx="135" ry="31" fill="none" stroke="#9bb8c4" stroke-width="3"/>
+        <ellipse cx="165" cy="150" rx="103" ry="24" fill="none" stroke="#b7c8a9" stroke-width="3"/>
+        <ellipse cx="165" cy="150" rx="72" ry="17" fill="none" stroke="#d2b884" stroke-width="3"/>
+        <ellipse cx="165" cy="150" rx="40" ry="9" fill="none" stroke="#b45f2a" stroke-width="3"/>
+        <polyline points="36,86 101,211 73,100 139,202 111,112 175,185 149,126 194,165" fill="none" stroke="#1e3d59" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M36 86 C88 140, 118 169, 161 160 C178 156, 190 151, 204 148" fill="none" stroke="#b45f2a" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="36" cy="86" r="5" fill="#1e3d59"/>
+        <circle cx="204" cy="148" r="5" fill="#b45f2a"/>
+        <text x="38" y="247" font-size="14" fill="#1e3d59">蓝色：SGD 容易横向摆动</text>
+        <text x="38" y="269" font-size="14" fill="#8a4a20">棕色：Momentum 更平滑</text>
+      </svg>
+    </div>
+    <div>
+      <div class="box blue">
+        <h3>陡峭方向</h3>
+        <p>梯度符号经常交替。指数平均会把正负波动互相抵消，所以震荡被削弱。</p>
+      </div>
+      <div class="box green" style="margin-top:5mm;">
+        <h3>平坦方向</h3>
+        <p>梯度长期同向。指数平均会累积这个方向，让有效更新更稳定。</p>
+      </div>
+      <div class="box amber" style="margin-top:5mm;">
+        <h3>但是</h3>
+        <p>Momentum 仍然只有一个全局学习率。它不能真正把每个方向的曲率都缩放到合适尺度。</p>
+      </div>
+    </div>
+  </div>
+  <div class="chalk">这也是为什么 Momentum 很常用，但它不是自适应优化器。它解决的是“时间上的抖动”，不是“坐标上的尺度不一致”。</div>
+  <div class="footer"><span>曲率方向与平均</span><span>8 / 12</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>08 Nesterov</span><span>9</span></div>
+  <h2>Nesterov Momentum：先看一眼将要到达的位置</h2>
+  <p>普通 Momentum 用当前位置 θ<sub>t</sub> 上的梯度更新 m<sub>t</sub>。Nesterov 的想法是：既然动量会把我们推向前方，那就先在前方位置看一眼梯度。</p>
+  <div class="formula tight">
+    <math display="block">
+      <msubsup><mi>θ</mi><mi>t</mi><mrow><mi>look</mi></mrow></msubsup>
+      <mo>=</mo>
+      <msub><mi>θ</mi><mi>t</mi></msub>
+      <mo>-</mo>
+      <msub><mi>η</mi><mi>t</mi></msub>
+      <mi>μ</mi>
+      <msub><mi>m</mi><mrow><mi>t</mi><mo>-</mo><mn>1</mn></mrow></msub>
+    </math>
+  </div>
+  <div class="formula smallmath">
+    <math display="block">
+      <msub><mi>g</mi><mi>t</mi></msub>
+      <mo>=</mo>
+      <mi>∇</mi><mi>F</mi><mo>(</mo><msubsup><mi>θ</mi><mi>t</mi><mrow><mi>look</mi></mrow></msubsup><mo>)</mo>
+      <mo>,</mo>
+      <mspace width="0.6em"></mspace>
+      <msub><mi>m</mi><mi>t</mi></msub>
+      <mo>=</mo>
+      <mi>μ</mi><msub><mi>m</mi><mrow><mi>t</mi><mo>-</mo><mn>1</mn></mrow></msub>
+      <mo>+</mo>
+      <mo>(</mo><mn>1</mn><mo>-</mo><mi>μ</mi><mo>)</mo><msub><mi>g</mi><mi>t</mi></msub>
+    </math>
+  </div>
+  <div class="formula tight">
+    <math display="block">
+      <msub><mi>θ</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub>
+      <mo>=</mo>
+      <msub><mi>θ</mi><mi>t</mi></msub>
+      <mo>-</mo>
+      <msub><mi>η</mi><mi>t</mi></msub>
+      <msub><mi>m</mi><mi>t</mi></msub>
+    </math>
+  </div>
+  <div class="grid2">
+    <div class="box green">
+      <h3>直觉</h3>
+      <p>如果前方已经开始偏离好方向，Nesterov 会更早看到这个偏离，从而更早修正。</p>
+    </div>
+    <div class="box amber">
+      <h3>不要过度神化</h3>
+      <p>在深度学习实践里，Nesterov 常常有帮助，但它仍然属于时间平均家族，不是坐标自适应方法。</p>
+    </div>
+  </div>
+  <div class="chalk">本讲把普通 Momentum 作为主线。Nesterov 是同一思想的“前瞻版”。</div>
+  <div class="footer"><span>前瞻梯度</span><span>9 / 12</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>09 Momentum 的边界</span><span>10</span></div>
+  <h2>Momentum 没有改变参数空间的度量</h2>
+  <p>Momentum 的更新仍然是：</p>
+  <div class="formula tight">
+    <math display="block">
+      <msub><mi>θ</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub>
+      <mo>=</mo>
+      <msub><mi>θ</mi><mi>t</mi></msub>
+      <mo>-</mo>
+      <msub><mi>η</mi><mi>t</mi></msub>
+      <msub><mi>m</mi><mi>t</mi></msub>
+    </math>
+  </div>
+  <p>它改变了 m<sub>t</sub> 的时间质量，却没有给不同坐标不同缩放。若要改变参数空间里的尺度，通常需要一个预条件器：</p>
+  <div class="formula">
+    <math display="block">
+      <msub><mi>θ</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub>
+      <mo>=</mo>
+      <msub><mi>θ</mi><mi>t</mi></msub>
+      <mo>-</mo>
+      <msub><mi>η</mi><mi>t</mi></msub>
+      <msub><mi>P</mi><mi>t</mi></msub>
+      <msub><mi>m</mi><mi>t</mi></msub>
+    </math>
+  </div>
+  <table class="summary-table">
+    <tr>
+      <th>方法家族</th>
+      <th>主要改造</th>
+      <th>解决什么</th>
+    </tr>
+    <tr>
+      <td>Momentum</td>
+      <td>m<sub>t</sub> 是梯度的时间平均</td>
+      <td>降低单步噪声，减弱震荡</td>
+    </tr>
+    <tr>
+      <td>AdaGrad / RMSProp / Adam</td>
+      <td>P<sub>t</sub> 是坐标级缩放</td>
+      <td>处理不同坐标的梯度尺度差异</td>
+    </tr>
+    <tr>
+      <td>Shampoo / SOAP / Muon</td>
+      <td>P<sub>t</sub> 或更新方向利用矩阵结构</td>
+      <td>处理矩阵参数的几何结构</td>
+    </tr>
+  </table>
+  <div class="chalk">所以从 SGD 到现代优化器，有两条线同时发展：时间上更稳，空间上更会缩放。</div>
+  <div class="footer"><span>时间平均与空间缩放</span><span>10 / 12</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>10 通往 Muon</span><span>11</span></div>
+  <h2>矩阵参数上的 Momentum 是 Muon 的入口</h2>
+  <p>对于线性层权重矩阵：</p>
+  <div class="formula tight">
+    <span class="unicode-math">W<sub>t</sub> ∈ ℝ<sup>m×n</sup></span>
+  </div>
+  <p>mini-batch 梯度也是一个矩阵，记作 G<sub>t</sub>。矩阵版 Momentum 写成：</p>
+  <div class="formula">
+    <math display="block">
+      <msub><mi>M</mi><mi>t</mi></msub>
+      <mo>=</mo>
+      <mi>μ</mi>
+      <msub><mi>M</mi><mrow><mi>t</mi><mo>-</mo><mn>1</mn></mrow></msub>
+      <mo>+</mo>
+      <mo>(</mo><mn>1</mn><mo>-</mo><mi>μ</mi><mo>)</mo>
+      <msub><mi>G</mi><mi>t</mi></msub>
+    </math>
+  </div>
+  <div class="formula tight">
+    <math display="block">
+      <msub><mi>W</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub>
+      <mo>=</mo>
+      <msub><mi>W</mi><mi>t</mi></msub>
+      <mo>-</mo>
+      <msub><mi>η</mi><mi>t</mi></msub>
+      <msub><mi>M</mi><mi>t</mi></msub>
+    </math>
+  </div>
+  <p>Muon 的关键转弯是：不直接用 M<sub>t</sub> 更新，而是先把 M<sub>t</sub> 当成矩阵方向，再做几何整理，得到 U<sub>t</sub>。</p>
+  <div class="flow">
+    <div class="step">
+      <strong>梯度矩阵</strong>
+      <p class="note">G<sub>t</sub> 来自 mini-batch。</p>
+    </div>
+    <div class="arrow">→</div>
+    <div class="step">
+      <strong>动量矩阵</strong>
+      <p class="note">M<sub>t</sub> 降低时间噪声。</p>
+    </div>
+    <div class="arrow">→</div>
+    <div class="step">
+      <strong>结构化更新</strong>
+      <p class="note">U<sub>t</sub> 由 M<sub>t</sub> 的矩阵几何得到。</p>
+    </div>
+  </div>
+  <div class="formula smallmath">
+    <math display="block">
+      <msub><mi>U</mi><mi>t</mi></msub>
+      <mo>≈</mo>
+      <mi>Orth</mi><mo>(</mo><msub><mi>M</mi><mi>t</mi></msub><mo>)</mo>
+      <mo>,</mo>
+      <mspace width="0.6em"></mspace>
+      <msub><mi>W</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub>
+      <mo>=</mo>
+      <msub><mi>W</mi><mi>t</mi></msub>
+      <mo>-</mo>
+      <msub><mi>η</mi><mi>t</mi></msub>
+      <msub><mi>U</mi><mi>t</mi></msub>
+    </math>
+  </div>
+  <div class="chalk">这不是 Muon 的完整定义，只是入口：Muon 不是抛弃 Momentum，而是在 Momentum 之后再做矩阵几何处理。</div>
+  <div class="footer"><span>矩阵 Momentum</span><span>11 / 12</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>11 小结</span><span>12</span></div>
+  <h2>本讲你应该带走的四句话</h2>
+  <ol>
+    <li>Momentum 把单步梯度 g<sub>t</sub> 变成时间平均 m<sub>t</sub>。</li>
+    <li>μ 越大，噪声越小，但方向变化时滞后越强。</li>
+    <li>在狭长谷里，Momentum 会削弱陡峭方向的震荡，增强平坦方向的持续运动。</li>
+    <li>Momentum 解决的是时间问题；Adam 和 Muon 还要继续解决空间几何问题。</li>
+  </ol>
+  <div class="formula smallmath">
+    <math display="block">
+      <msub><mi>m</mi><mi>t</mi></msub>
+      <mo>=</mo>
+      <mi>μ</mi><msub><mi>m</mi><mrow><mi>t</mi><mo>-</mo><mn>1</mn></mrow></msub>
+      <mo>+</mo>
+      <mo>(</mo><mn>1</mn><mo>-</mo><mi>μ</mi><mo>)</mo><msub><mi>g</mi><mi>t</mi></msub>
+      <mo>,</mo>
+      <mspace width="0.6em"></mspace>
+      <msub><mi>θ</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub>
+      <mo>=</mo>
+      <msub><mi>θ</mi><mi>t</mi></msub>
+      <mo>-</mo>
+      <msub><mi>η</mi><mi>t</mi></msub><msub><mi>m</mi><mi>t</mi></msub>
+    </math>
+  </div>
+  <div class="grid2">
+    <div class="box blue">
+      <h3>课后自检</h3>
+      <ul>
+        <li>能否解释 μ = 0.9 为什么约等于记住 10 步？</li>
+        <li>能否说清 Momentum 降低的是哪一种误差？</li>
+        <li>能否区分 Momentum 和 Adam 的核心差别？</li>
+      </ul>
+    </div>
+    <div class="box amber">
+      <h3>下一讲预告</h3>
+      <p>我们会进入 AdaGrad、RMSProp 和 Adam：不再只平均梯度本身，还要估计每个坐标的梯度尺度，从而构造坐标级自适应步长。</p>
+    </div>
+  </div>
+  <div class="chalk">如果 lecture01 是“SGD 是什么”，lecture02 就是“为什么要记住过去”。下一讲会回答“为什么不同坐标不该用同一个尺子”。</div>
+  <div class="footer"><span>下一讲：自适应缩放</span><span>12 / 12</span></div>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>从 SGD 到 Muon 第六讲</title>
+  <style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #f4f1ea;
+    color: #17202a;
+    font-family: "Noto Serif SC", "Microsoft YaHei", "SimSun", serif;
+    letter-spacing: 0;
+  }
+  .page {
+    position: relative;
+    width: 210mm;
+    height: 297mm;
+    padding: 19mm 18mm 17mm;
+    background: #fffdf8;
+    page-break-after: always;
+    overflow: hidden;
+  }
+  .page:last-child { page-break-after: auto; }
+  .topline {
+    position: absolute;
+    left: 18mm;
+    right: 18mm;
+    top: 12mm;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #66717d;
+    font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    font-size: 9pt;
+  }
+  .footer {
+    position: absolute;
+    left: 18mm;
+    right: 18mm;
+    bottom: 9mm;
+    display: flex;
+    justify-content: space-between;
+    color: #7a828a;
+    font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    font-size: 9pt;
+    border-top: 1px solid #d9d4ca;
+    padding-top: 3mm;
+  }
+  h1, h2, h3 {
+    margin: 0;
+    font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+  h1 { font-size: 31pt; line-height: 1.15; color: #0f2638; }
+  h2 { font-size: 21.5pt; line-height: 1.2; color: #10344c; margin-bottom: 7mm; }
+  h3 { font-size: 13.2pt; color: #274c5e; margin: 4mm 0 2mm; }
+  p, li { font-size: 12pt; line-height: 1.68; }
+  p { margin: 0 0 4mm; }
+  ul, ol { margin: 2mm 0 4mm 7mm; padding-left: 5mm; }
+  li { margin: 1.35mm 0; }
+  .lead { font-size: 16pt; line-height: 1.62; color: #2f3c48; margin-top: 9mm; max-width: 158mm; }
+  .subtitle { font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif; font-size: 14pt; color: #6b4b20; margin-top: 6mm; }
+  .rule { width: 48mm; height: 1.4mm; background: #b45f2a; margin: 8mm 0 10mm; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 7mm; margin-top: 4mm; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4.5mm; margin-top: 4mm; }
+  .flow { display: grid; grid-template-columns: 1fr 9mm 1fr 9mm 1fr; align-items: center; gap: 2mm; margin-top: 5mm; }
+  .arrow { text-align: center; color: #8a5a24; font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif; font-size: 20pt; }
+  .box, .step {
+    border: 1px solid #d8cdbd;
+    background: #fbf8f1;
+    border-radius: 3mm;
+    padding: 4.6mm;
+  }
+  .step { min-height: 34mm; }
+  .box.blue, .step.blue { border-color: #bfd4dd; background: #f3f9fb; }
+  .box.amber, .step.amber { border-color: #dcc49b; background: #fff8e8; }
+  .box.green, .step.green { border-color: #b9d1c2; background: #f1faf4; }
+  .box h3, .step h3 { margin-top: 0; }
+  .box p, .box li, .step p, .step li { font-size: 10.9pt; line-height: 1.55; }
+  .formula {
+    margin: 4mm 0 5mm;
+    padding: 4mm 5mm;
+    background: #f7f7f2;
+    border: 1px solid #d7d7cf;
+    border-radius: 2mm;
+    text-align: center;
+    overflow: hidden;
+  }
+  .formula.tight { margin: 2.5mm 0 4mm; padding: 3mm 4mm; }
+  .formula.small { padding: 3.2mm 4mm; }
+  .umath {
+    font-family: "Cambria Math", "Cambria", "Noto Serif SC", "Microsoft YaHei", serif;
+    font-size: 18.2pt;
+    line-height: 1.25;
+  }
+  .formula.small .umath { font-size: 15.3pt; }
+  .note { color: #4c5964; font-size: 11pt; line-height: 1.6; }
+  .chalk {
+    font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    font-size: 10.8pt;
+    line-height: 1.58;
+    color: #263238;
+    border-left: 3px solid #b45f2a;
+    padding-left: 4mm;
+    margin-top: 4mm;
+  }
+  .summary-table { width: 100%; border-collapse: collapse; margin-top: 4mm; font-size: 10.6pt; }
+  .summary-table th, .summary-table td { border: 1px solid #d9d4ca; padding: 2.8mm; text-align: left; vertical-align: top; line-height: 1.48; }
+  .summary-table th { font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif; background: #eef4f5; color: #24485a; }
+  .svgbox { width: 100%; height: 54mm; margin: 2mm 0 1mm; }
+  .caption { color: #6d747b; font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif; font-size: 9.6pt; text-align: center; margin-top: 1mm; }
+  .compact p { margin-bottom: 2.5mm; }
+</style>
+</head>
+<body>
+<section class="page">
+  <div class="topline"><span>从 SGD 到 Muon</span><span>Lecture 06</span></div>
+  <h1>Muon 实践：什么时候用，<br>怎么用，别怎么用</h1>
+  <div class="subtitle">第六讲：参数分组、缩放、系统成本与变体地图</div>
+  <div class="rule"></div>
+  <p class="lead">Muon 的核心公式不长，但真正使用时要处理很多工程细节：哪些参数交给 Muon，哪些仍用 AdamW；如何做 weight decay；正交化步数、缩放、QKV 和分布式开销该怎样理解。</p>
+  <div class="grid2" style="margin-top:14mm;">
+    <div class="box blue"><h3>本讲要回答</h3><ul><li>Muon 实践中的参数分组怎么做？</li><li>weight decay 和 update scaling 如何理解？</li><li>Muon 的主要代价和边界在哪里？</li><li>后续变体大致在改哪一块？</li></ul></div>
+    <div class="box amber"><h3>本讲先不做</h3><ul><li>不声称 Muon 在所有任务都优于 AdamW。</li><li>不替代具体项目里的超参数搜索。</li><li>不深入每篇 2026 变体的证明。</li></ul></div>
+  </div>
+  <p class="note" style="position:absolute; bottom:28mm; left:18mm;">这组讲义会固定符号：F 表示当前训练目标，训练时通常 F = L̂<sub>N</sub>；g<sub>t</sub> 是 mini-batch 梯度，m<sub>t</sub> 是一阶动量。</p>
+  <div class="footer"><span>中文讲义</span><span>2026-06-19</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>01 总配方</span><span>2</span></div>
+  <h2>实践里的 Muon 通常是混合优化器</h2>
+  
+    <p>一个常见分组是：</p>
+    <table class="summary-table">
+      <tr><th>参数类型</th><th>常见处理</th><th>理由</th></tr>
+      <tr><td>隐藏层二维矩阵</td><td>Muon</td><td>可以利用矩阵结构</td></tr>
+      <tr><td>bias、norm、标量、向量</td><td>AdamW 或不做 decay</td><td>不适合矩阵正交化</td></tr>
+      <tr><td>embedding、输出头</td><td>AdamW</td><td>经验上常与隐藏层动态不同</td></tr>
+      <tr><td>卷积核</td><td>可展平成二维后尝试 Muon</td><td>把空间和通道维合并成矩阵</td></tr>
+    </table>
+    <div class="chalk">最重要的实践观念：Muon 是给一部分矩阵参数的更新规则，不是全模型万能替换。</div>
+  
+  <div class="footer"><span>参数分组</span><span>2 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>02 一步训练流程</span><span>3</span></div>
+  <h2>每一步里 AdamW 组和 Muon 组并行更新</h2>
+  
+    <div class="flow">
+      <div class="step blue"><h3>反向传播</h3><p>得到所有参数的梯度。</p></div>
+      <div class="arrow">→</div>
+      <div class="step green"><h3>分组处理</h3><p>矩阵隐藏层进 Muon，其余进 AdamW。</p></div>
+      <div class="arrow">→</div>
+      <div class="step amber"><h3>合并更新</h3><p>所有参数同步进入下一步。</p></div>
+    </div>
+    <p>Muon 组内部通常是：</p>
+    <div class="formula small"><span class="umath">G<sub>t</sub> → M<sub>t</sub> → Newton-Schulz → U<sub>t</sub> → W<sub>t+1</sub></span></div>
+    <p>AdamW 组内部仍然是：</p>
+    <div class="formula small"><span class="umath">g<sub>t</sub> → m̂<sub>t</sub>, v̂<sub>t</sub> → θ<sub>t+1</sub></span></div>
+    <div class="chalk">这两条支路不是互相排斥，而是各管一类参数。</div>
+  
+  <div class="footer"><span>训练循环</span><span>3 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>03 权重衰减</span><span>4</span></div>
+  <h2>Muon 里也要把 weight decay 当成独立收缩</h2>
+  
+    <p>和 AdamW 一样，实践中更清楚的写法是先做 decoupled weight decay：</p>
+    <div class="formula tight"><span class="umath">W<sub>t</sub><sup>decay</sup> = (1 - ηλ)W<sub>t</sub></span></div>
+    <p>然后对梯度方向做 Muon 更新：</p>
+    <div class="formula small"><span class="umath">W<sub>t+1</sub> = W<sub>t</sub><sup>decay</sup> - η · scale(W) · U<sub>t</sub></span></div>
+    <div class="grid2">
+      <div class="box blue"><h3>为什么解耦</h3><p>weight decay 表示对参数本身的收缩，不应该被正交化子程序混进去。</p></div>
+      <div class="box amber"><h3>为什么有 scale</h3><p>Orth 后的矩阵范数与形状相关，实际配方常需要层形状相关的缩放。</p></div>
+    </div>
+    <div class="chalk">把 decay、learning rate、orthogonalization 分开理解，调参时会清楚很多。</div>
+  
+  <div class="footer"><span>decoupled weight decay</span><span>4 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>04 缩放问题</span><span>5</span></div>
+  <h2>Orth(M) 的范数由矩阵形状决定</h2>
+  
+    <p>如果 U 是 m × n 的半正交矩阵，那么它的谱范数约为 1，Frobenius 范数约为：</p>
+    <div class="formula tight"><span class="umath">||U||<sub>F</sub> ≈ √min(m, n)</span></div>
+    <p>这意味着同一个 η 在不同形状的层上可能产生不同总更新量。因此许多 Muon 配方会加上形状相关或层相关 scaling。</p>
+    <div class="grid2">
+      <div class="box green"><h3>谱范数稳定</h3><p>最大奇异值被控制在约 1。</p></div>
+      <div class="box amber"><h3>总能量变化</h3><p>Frobenius 范数随短边维度增长。</p></div>
+    </div>
+    <p>所以学习率不是唯一尺度，更新归一化后的 shape scale 也会进入配方。</p>
+    <div class="chalk">Muon 的“步长”不只是 η，还包括正交化后矩阵更新如何按层缩放。</div>
+  
+  <div class="footer"><span>update scaling</span><span>5 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>05 QKV 和层结构</span><span>6</span></div>
+  <h2>矩阵怎么切，会影响 Muon 看到的几何</h2>
+  
+    <p>Transformer 里 Q、K、V 有时被合成一个大矩阵实现。但 Muon 的正交化会把整个矩阵作为一个几何对象。</p>
+    <div class="grid2">
+      <div class="box amber"><h3>合并 QKV</h3><p>一个大矩阵一起正交化，Q/K/V 的子空间会被混在一个谱结构里。</p></div>
+      <div class="box green"><h3>分开 Q、K、V</h3><p>三个矩阵各自形成动量并正交化，经验上常被认为更合理。</p></div>
+    </div>
+    <p>这说明 Muon 对模块边界更敏感：如何把参数组织成矩阵，会影响优化器的行为。</p>
+    <div class="chalk">Adam 的逐坐标缩放对矩阵切分不那么敏感；Muon 的矩阵正交化则会关心你把哪些维度放进同一个矩阵。</div>
+  
+  <div class="footer"><span>模块边界</span><span>6 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>06 成本与系统</span><span>7</span></div>
+  <h2>Muon 的额外成本主要来自正交化矩阵乘法</h2>
+  
+    <p>Newton-Schulz 每一步需要若干矩阵乘法。若做 q 步，额外成本大致随 q、矩阵短边维度和层数增加。</p>
+    <div class="grid2">
+      <div class="box blue"><h3>为什么可行</h3><p>它使用矩阵乘法，适合 GPU；相比每步 SVD 便宜很多。</p></div>
+      <div class="box amber"><h3>为什么仍有成本</h3><p>非元素级优化器更难和分片、通信、量化状态等系统机制无缝结合。</p></div>
+    </div>
+    <p>因此大规模训练里，Muon 不只是数学问题，也是系统实现问题。</p>
+    <div class="chalk">不要只问“Muon 方向好不好”，还要问“这个方向在我的训练系统里能不能便宜地算出来”。</div>
+  
+  <div class="footer"><span>计算与通信</span><span>7 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>07 什么时候谨慎</span><span>8</span></div>
+  <h2>Muon 的边界比公式更重要</h2>
+  
+    <table class="summary-table">
+      <tr><th>场景</th><th>需要谨慎的原因</th></tr>
+      <tr><td>参数不是二维矩阵</td><td>Muon 的核心正交化对象不成立</td></tr>
+      <tr><td>embedding / 输出头</td><td>经验上常用 AdamW 更稳</td></tr>
+      <tr><td>小模型或小 batch</td><td>正交化开销和噪声特性可能不划算</td></tr>
+      <tr><td>微调 / RLHF</td><td>预训练上的优势不自动迁移</td></tr>
+      <tr><td>分布式分片复杂</td><td>矩阵级更新需要额外系统支持</td></tr>
+    </table>
+    <div class="chalk">Muon 是一个强工具，但不是“看到矩阵就上”。先保证 AdamW 基线被认真调过，再判断 Muon 的收益。</div>
+  
+  <div class="footer"><span>适用边界</span><span>8 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>08 变体地图</span><span>9</span></div>
+  <h2>后续 Muon 变体大多在改四个位置</h2>
+  
+    <div class="grid2">
+      <div class="box blue"><h3>改动量信号</h3><p>Nesterov、方差自适应、梯度差分加速等。</p></div>
+      <div class="box green"><h3>改正交化子程序</h3><p>更少 Newton-Schulz 步数、更好多项式、低秩近似。</p></div>
+      <div class="box amber"><h3>改谱变换</h3><p>不一定把奇异值全压成 1，而是保留部分谱信息。</p></div>
+      <div class="box blue"><h3>改系统状态</h3><p>量化、分布式、张量化、LoRA 低秩结构。</p></div>
+    </div>
+    <p>读新论文时可以先问：它是在改 G → M，还是改 M → U，还是改 U 的缩放与部署？</p>
+    <div class="chalk">这张地图比背名字更重要。名字会变，四个改动位置相对稳定。</div>
+  
+  <div class="footer"><span>Muon-family 阅读地图</span><span>9 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>09 全系列总结</span><span>10</span></div>
+  <h2>从 SGD 到 Muon，我们完成了一条主线</h2>
+  
+    <ol>
+      <li>SGD：用 mini-batch 梯度近似训练集梯度。</li>
+      <li>Momentum：在时间上平均梯度，降低单步噪声。</li>
+      <li>Adam：在坐标上估计尺度，构造对角自适应步长。</li>
+      <li>Shampoo/SOAP：开始把矩阵左右空间纳入优化器状态。</li>
+      <li>Muon：对矩阵动量做正交化，用谱更平坦的方向更新隐藏层。</li>
+    </ol>
+    <div class="formula tight"><span class="umath">SGD → Momentum → AdamW → Shampoo/SOAP → Muon</span></div>
+    <div class="grid2">
+      <div class="box blue"><h3>你现在应该能读懂</h3><p>Muon 更新方程、Newton-Schulz 迭代、Orth(M) 的谱意义、与 AdamW 的分工。</p></div>
+      <div class="box amber"><h3>下一阶段可以做</h3><p>读 Muon 原文和后续变体论文，把每篇论文放到这张优化器地图上。</p></div>
+    </div>
+    <div class="chalk">Muon 的关键不是“新 optimizer 很神奇”，而是它把矩阵结构、动量信号和 GPU 友好的正交化算法接在了一起。</div>
+  
+  <div class="footer"><span>系列收束</span><span>10 / 10</span></div>
+</section>
+</body>
+</html>
