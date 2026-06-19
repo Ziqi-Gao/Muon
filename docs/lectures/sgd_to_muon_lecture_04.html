@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>从 SGD 到 Muon 第四讲</title>
+  <style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #f4f1ea;
+    color: #17202a;
+    font-family: "Noto Serif SC", "Microsoft YaHei", "SimSun", serif;
+    letter-spacing: 0;
+  }
+  .page {
+    position: relative;
+    width: 210mm;
+    height: 297mm;
+    padding: 19mm 18mm 17mm;
+    background: #fffdf8;
+    page-break-after: always;
+    overflow: hidden;
+  }
+  .page:last-child { page-break-after: auto; }
+  .topline {
+    position: absolute;
+    left: 18mm;
+    right: 18mm;
+    top: 12mm;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #66717d;
+    font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    font-size: 9pt;
+  }
+  .footer {
+    position: absolute;
+    left: 18mm;
+    right: 18mm;
+    bottom: 9mm;
+    display: flex;
+    justify-content: space-between;
+    color: #7a828a;
+    font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    font-size: 9pt;
+    border-top: 1px solid #d9d4ca;
+    padding-top: 3mm;
+  }
+  h1, h2, h3 {
+    margin: 0;
+    font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+  h1 { font-size: 31pt; line-height: 1.15; color: #0f2638; }
+  h2 { font-size: 21.5pt; line-height: 1.2; color: #10344c; margin-bottom: 7mm; }
+  h3 { font-size: 13.2pt; color: #274c5e; margin: 4mm 0 2mm; }
+  p, li { font-size: 12pt; line-height: 1.68; }
+  p { margin: 0 0 4mm; }
+  ul, ol { margin: 2mm 0 4mm 7mm; padding-left: 5mm; }
+  li { margin: 1.35mm 0; }
+  .lead { font-size: 16pt; line-height: 1.62; color: #2f3c48; margin-top: 9mm; max-width: 158mm; }
+  .subtitle { font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif; font-size: 14pt; color: #6b4b20; margin-top: 6mm; }
+  .rule { width: 48mm; height: 1.4mm; background: #b45f2a; margin: 8mm 0 10mm; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 7mm; margin-top: 4mm; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4.5mm; margin-top: 4mm; }
+  .flow { display: grid; grid-template-columns: 1fr 9mm 1fr 9mm 1fr; align-items: center; gap: 2mm; margin-top: 5mm; }
+  .arrow { text-align: center; color: #8a5a24; font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif; font-size: 20pt; }
+  .box, .step {
+    border: 1px solid #d8cdbd;
+    background: #fbf8f1;
+    border-radius: 3mm;
+    padding: 4.6mm;
+  }
+  .step { min-height: 34mm; }
+  .box.blue, .step.blue { border-color: #bfd4dd; background: #f3f9fb; }
+  .box.amber, .step.amber { border-color: #dcc49b; background: #fff8e8; }
+  .box.green, .step.green { border-color: #b9d1c2; background: #f1faf4; }
+  .box h3, .step h3 { margin-top: 0; }
+  .box p, .box li, .step p, .step li { font-size: 10.9pt; line-height: 1.55; }
+  .formula {
+    margin: 4mm 0 5mm;
+    padding: 4mm 5mm;
+    background: #f7f7f2;
+    border: 1px solid #d7d7cf;
+    border-radius: 2mm;
+    text-align: center;
+    overflow: hidden;
+  }
+  .formula.tight { margin: 2.5mm 0 4mm; padding: 3mm 4mm; }
+  .formula.small { padding: 3.2mm 4mm; }
+  .umath {
+    font-family: "Cambria Math", "Cambria", "Noto Serif SC", "Microsoft YaHei", serif;
+    font-size: 18.2pt;
+    line-height: 1.25;
+  }
+  .formula.small .umath { font-size: 15.3pt; }
+  .note { color: #4c5964; font-size: 11pt; line-height: 1.6; }
+  .chalk {
+    font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    font-size: 10.8pt;
+    line-height: 1.58;
+    color: #263238;
+    border-left: 3px solid #b45f2a;
+    padding-left: 4mm;
+    margin-top: 4mm;
+  }
+  .summary-table { width: 100%; border-collapse: collapse; margin-top: 4mm; font-size: 10.6pt; }
+  .summary-table th, .summary-table td { border: 1px solid #d9d4ca; padding: 2.8mm; text-align: left; vertical-align: top; line-height: 1.48; }
+  .summary-table th { font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif; background: #eef4f5; color: #24485a; }
+  .svgbox { width: 100%; height: 54mm; margin: 2mm 0 1mm; }
+  .caption { color: #6d747b; font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif; font-size: 9.6pt; text-align: center; margin-top: 1mm; }
+  .compact p { margin-bottom: 2.5mm; }
+</style>
+</head>
+<body>
+<section class="page">
+  <div class="topline"><span>从 SGD 到 Muon</span><span>Lecture 04</span></div>
+  <h1>矩阵几何：从 Adam<br>走向 Muon 的桥</h1>
+  <div class="subtitle">第四讲：预条件、Shampoo/SOAP 与极分解</div>
+  <div class="rule"></div>
+  <p class="lead">Adam 把每个坐标单独缩放，但神经网络里的核心权重往往是矩阵。矩阵有行空间、列空间和奇异值结构；一旦承认这一点，Muon 的正交化更新就不再突兀。</p>
+  <div class="grid2" style="margin-top:14mm;">
+    <div class="box blue"><h3>本讲要回答</h3><ul><li>矩阵梯度为什么不只是长向量？</li><li>Shampoo 怎样做左右预条件？</li><li>为什么“无累积 Shampoo”会出现 UV<sup>T</sup>？</li><li>SOAP 和 Muon 分别继承了哪条思想？</li></ul></div>
+    <div class="box amber"><h3>本讲先不做</h3><ul><li>不深入证明 Shampoo regret bound。</li><li>不讨论所有二阶优化细节。</li><li>不讲 Muon 的完整实现，留到 lecture05。</li></ul></div>
+  </div>
+  <p class="note" style="position:absolute; bottom:28mm; left:18mm;">这组讲义会固定符号：F 表示当前训练目标，训练时通常 F = L̂<sub>N</sub>；g<sub>t</sub> 是 mini-batch 梯度，m<sub>t</sub> 是一阶动量。</p>
+  <div class="footer"><span>中文讲义</span><span>2026-06-19</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>01 矩阵参数</span><span>2</span></div>
+  <h2>线性层权重不是普通坐标集合</h2>
+  
+    <p>考虑一个线性层权重：</p>
+    <div class="formula tight"><span class="umath">W ∈ ℝ<sup>m×n</sup>, &nbsp; G<sub>t</sub> = ∇<sub>W</sub>F(W<sub>t</sub>)</span></div>
+    <p>如果把 W 摊平成向量，Adam 只会给每个元素一个缩放。但矩阵还有两个天然方向：</p>
+    <div class="grid2">
+      <div class="box blue"><h3>行空间</h3><p>对应输出通道或神经元之间的组合。</p></div>
+      <div class="box green"><h3>列空间</h3><p>对应输入特征或前一层表示之间的组合。</p></div>
+    </div>
+    <p>矩阵预条件的基本形状是：</p>
+    <div class="formula small"><span class="umath">W<sub>t+1</sub> = W<sub>t</sub> - η · P<sub>L,t</sub> G<sub>t</sub> P<sub>R,t</sub></span></div>
+    <div class="chalk">左乘改变输出空间尺度，右乘改变输入空间尺度。这是对角 Adam 做不到的。</div>
+  
+  <div class="footer"><span>矩阵参数的两侧结构</span><span>2 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>02 二阶直觉</span><span>3</span></div>
+  <h2>预条件就是先换一把尺子再下降</h2>
+  
+    <p>普通梯度下降默认每个方向的单位长度一样：</p>
+    <div class="formula tight"><span class="umath">ΔW = -ηG</span></div>
+    <p>预条件下降则先用 P 改变方向和尺度：</p>
+    <div class="formula tight"><span class="umath">ΔW = -ηP(G)</span></div>
+    <div class="grid3">
+      <div class="step blue"><h3>对角预条件</h3><p>每个元素单独缩放，Adam 属于这一类。</p></div>
+      <div class="step green"><h3>矩阵预条件</h3><p>按行空间和列空间缩放，Shampoo 属于这一类。</p></div>
+      <div class="step amber"><h3>正交化更新</h3><p>把奇异值压平，Muon 属于这一类。</p></div>
+    </div>
+    <p>这三者不是互相排斥，而是越来越重视参数的结构。</p>
+    <div class="chalk">从“坐标”到“矩阵”的变化，是理解 Muon 的关键台阶。</div>
+  
+  <div class="footer"><span>预条件的意义</span><span>3 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>03 Shampoo</span><span>4</span></div>
+  <h2>Shampoo：分别估计左右两侧的梯度尺度</h2>
+  
+    <p>对矩阵梯度 G<sub>t</sub>，Shampoo 维护两个累积矩阵：</p>
+    <div class="formula small"><span class="umath">L<sub>t</sub> = εI + Σ<sub>k≤t</sub> G<sub>k</sub>G<sub>k</sub><sup>T</sup>, &nbsp; R<sub>t</sub> = εI + Σ<sub>k≤t</sub> G<sub>k</sub><sup>T</sup>G<sub>k</sub></span></div>
+    <p>更新方向使用左右逆四次根：</p>
+    <div class="formula small"><span class="umath">U<sub>t</sub> = L<sub>t</sub><sup>-1/4</sup> G<sub>t</sub> R<sub>t</sub><sup>-1/4</sup></span></div>
+    <div class="grid2">
+      <div class="box blue"><h3>为什么是两侧？</h3><p>G G<sup>T</sup> 捕捉行空间尺度，G<sup>T</sup>G 捕捉列空间尺度。</p></div>
+      <div class="box amber"><h3>为什么贵？</h3><p>需要矩阵累积和矩阵逆根，通信与计算都比 Adam 重。</p></div>
+    </div>
+    <div class="chalk">Shampoo 是重要桥梁：它说明“矩阵级缩放”可以比逐坐标缩放更贴近层结构。</div>
+  
+  <div class="footer"><span>Shampoo 左右预条件</span><span>4 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>04 极分解的影子</span><span>5</span></div>
+  <h2>去掉累积后，Shampoo 会露出 UV<sup>T</sup></h2>
+  
+    <p>假设只看当前梯度 G，并令它的奇异值分解为：</p>
+    <div class="formula tight"><span class="umath">G = U S V<sup>T</sup></span></div>
+    <p>如果把 Shampoo 的累积矩阵粗略替换成当前 G 的二阶矩：</p>
+    <div class="formula small"><span class="umath">(GG<sup>T</sup>)<sup>-1/4</sup> G (G<sup>T</sup>G)<sup>-1/4</sup> = U V<sup>T</sup></span></div>
+    <p>这个 U V<sup>T</sup> 就是 G 的极分解中的正交方向，也可以理解成把 G 的奇异值全部压成 1。</p>
+    <div class="grid2">
+      <div class="box green"><h3>保留什么</h3><p>保留左奇异向量 U 和右奇异向量 V，也就是矩阵方向。</p></div>
+      <div class="box amber"><h3>丢掉什么</h3><p>丢掉奇异值 S 的大小差异，也就是把谱压平。</p></div>
+    </div>
+    <div class="chalk">Muon 的核心更新正是这个方向：把动量矩阵 M 的奇异值压平，使用 U V<sup>T</sup> 作为更新方向。</div>
+  
+  <div class="footer"><span>从 Shampoo 到极分解</span><span>5 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>05 Orth(G)</span><span>6</span></div>
+  <h2>Orth(G) 是离 G 最近的半正交矩阵</h2>
+  
+    <p>当 G = U S V<sup>T</sup> 时，定义：</p>
+    <div class="formula tight"><span class="umath">Orth(G) = U V<sup>T</sup></span></div>
+    <p>若 G 是高矩阵或宽矩阵，U V<sup>T</sup> 是半正交的：行或列尽量互相正交。</p>
+    <svg class="svgbox" viewBox="0 0 560 180" role="img" aria-label="奇异值压平示意图">
+      <rect width="560" height="180" fill="#fbf8f1"/>
+      <line x1="55" y1="145" x2="240" y2="145" stroke="#9aa5ad" stroke-width="2"/>
+      <line x1="55" y1="35" x2="55" y2="145" stroke="#9aa5ad" stroke-width="2"/>
+      <rect x="80" y="45" width="28" height="100" fill="#9bb8c4"/>
+      <rect x="125" y="80" width="28" height="65" fill="#b7c8a9"/>
+      <rect x="170" y="118" width="28" height="27" fill="#d2b884"/>
+      <line x1="320" y1="145" x2="505" y2="145" stroke="#9aa5ad" stroke-width="2"/>
+      <line x1="320" y1="35" x2="320" y2="145" stroke="#9aa5ad" stroke-width="2"/>
+      <rect x="345" y="70" width="28" height="75" fill="#b45f2a"/>
+      <rect x="390" y="70" width="28" height="75" fill="#b45f2a"/>
+      <rect x="435" y="70" width="28" height="75" fill="#b45f2a"/>
+      <text x="82" y="165" font-size="14" fill="#5d6871">G 的奇异值</text>
+      <text x="345" y="165" font-size="14" fill="#5d6871">Orth(G) 的奇异值</text>
+      <text x="258" y="95" font-size="22" fill="#8a5a24">→</text>
+    </svg>
+    <div class="chalk">正交化不是把矩阵元素归一化，而是把矩阵的奇异值谱压平。</div>
+  
+  <div class="footer"><span>极分解方向</span><span>6 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>06 谱范数视角</span><span>7</span></div>
+  <h2>Orth(G) 也是谱范数球里的最陡方向</h2>
+  
+    <p>如果用谱范数限制一次矩阵更新的大小：</p>
+    <div class="formula tight"><span class="umath">||ΔW||<sub>2</sub> ≤ η</span></div>
+    <p>那么使一阶下降量最大的方向满足：</p>
+    <div class="formula small"><span class="umath">arg max<sub>||U||₂≤1</sub> ⟨G, U⟩ = Orth(G)</span></div>
+    <p>这里 ⟨G, U⟩ = trace(G<sup>T</sup>U)。所以 Orth(G) 可以被看成“谱范数度量下的最陡下降方向”。</p>
+    <div class="grid2">
+      <div class="box blue"><h3>欧氏度量</h3><p>最陡方向就是 G 本身。</p></div>
+      <div class="box green"><h3>谱范数度量</h3><p>最陡方向变成 Orth(G)。</p></div>
+    </div>
+    <div class="chalk">这给 Muon 一个干净的数学解释：它不是随便改梯度，而是在换一种矩阵范数下做下降。</div>
+  
+  <div class="footer"><span>谱范数信任域</span><span>7 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>07 为什么不能直接 SVD？</span><span>8</span></div>
+  <h2>SVD 好理解，但训练时太慢</h2>
+  
+    <p>如果每一步都对每个权重矩阵做 SVD：</p>
+    <div class="formula tight"><span class="umath">M = U S V<sup>T</sup>, &nbsp; update = U V<sup>T</sup></span></div>
+    <p>数学上很清楚，但在大模型训练里代价太高，也不够适合 GPU 上的高吞吐矩阵乘。</p>
+    <div class="grid2">
+      <div class="box amber"><h3>SVD</h3><p>精确、解释简单，但每层每步做会很贵。</p></div>
+      <div class="box green"><h3>Newton-Schulz</h3><p>只用矩阵乘法近似 Orth(M)，更适合现代 GPU。</p></div>
+    </div>
+    <p>Muon 选择的道路是：不用精确 SVD，而用少量 Newton-Schulz 迭代逼近极分解方向。</p>
+    <div class="chalk">lecture05 会把这个 Newton-Schulz 迭代完整展开。</div>
+  
+  <div class="footer"><span>计算可行性</span><span>8 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>08 SOAP</span><span>9</span></div>
+  <h2>SOAP：在 Shampoo 的空间里使用 Adam 的尺度思想</h2>
+  
+    <p>SOAP 可以粗略理解成：先用 Shampoo 的矩阵结构找到更合适的基，再在那个基里做 Adam 风格的二阶矩缩放。</p>
+    <div class="flow">
+      <div class="step blue"><h3>Shampoo</h3><p>估计矩阵左右空间。</p></div>
+      <div class="arrow">→</div>
+      <div class="step green"><h3>旋转基</h3><p>把梯度放到更合适的坐标系。</p></div>
+      <div class="arrow">→</div>
+      <div class="step amber"><h3>Adam</h3><p>在新坐标里做二阶矩缩放。</p></div>
+    </div>
+    <p>它对我们理解 Muon 的价值在于：Adam 和矩阵方法并不是两条完全断开的路。一个处理坐标尺度，一个处理矩阵空间。</p>
+    <table class="summary-table">
+      <tr><th>方法</th><th>主要状态</th><th>核心几何</th></tr>
+      <tr><td>Adam</td><td>m<sub>t</sub>, v<sub>t</sub></td><td>原始坐标轴上的对角缩放</td></tr>
+      <tr><td>Shampoo</td><td>L<sub>t</sub>, R<sub>t</sub></td><td>矩阵左右空间预条件</td></tr>
+      <tr><td>SOAP</td><td>矩阵基 + Adam 状态</td><td>矩阵基中的自适应缩放</td></tr>
+    </table>
+  
+  <div class="footer"><span>Adam 与矩阵预条件的结合</span><span>9 / 10</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>09 小结</span><span>10</span></div>
+  <h2>本讲你应该带走的四句话</h2>
+  
+    <ol>
+      <li>矩阵权重有行空间和列空间，不只是元素坐标。</li>
+      <li>Shampoo 用左右预条件矩阵缩放梯度。</li>
+      <li>去掉累积的 Shampoo 会露出 Orth(G) = U V<sup>T</sup>。</li>
+      <li>Muon 可以看成把 Momentum 的矩阵信号送进 Orth，再用 Newton-Schulz 近似实现。</li>
+    </ol>
+    <div class="formula tight"><span class="umath">G = U S V<sup>T</sup> &nbsp; → &nbsp; Orth(G) = U V<sup>T</sup></span></div>
+    <div class="grid2">
+      <div class="box blue"><h3>课后自检</h3><ul><li>能否解释左预条件和右预条件各自作用在哪里？</li><li>能否说清 Orth(G) 保留了什么、丢掉了什么？</li></ul></div>
+      <div class="box amber"><h3>下一讲预告</h3><p>我们正式定义 Muon：先得到动量矩阵 M<sub>t</sub>，再用 Newton-Schulz 把它正交化成 U<sub>t</sub>。</p></div>
+    </div>
+  
+  <div class="footer"><span>下一讲：Muon 核心</span><span>10 / 10</span></div>
+</section>
+</body>
+</html>

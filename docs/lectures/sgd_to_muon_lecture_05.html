@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>从 SGD 到 Muon 第五讲</title>
+  <style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #f4f1ea;
+    color: #17202a;
+    font-family: "Noto Serif SC", "Microsoft YaHei", "SimSun", serif;
+    letter-spacing: 0;
+  }
+  .page {
+    position: relative;
+    width: 210mm;
+    height: 297mm;
+    padding: 19mm 18mm 17mm;
+    background: #fffdf8;
+    page-break-after: always;
+    overflow: hidden;
+  }
+  .page:last-child { page-break-after: auto; }
+  .topline {
+    position: absolute;
+    left: 18mm;
+    right: 18mm;
+    top: 12mm;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #66717d;
+    font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    font-size: 9pt;
+  }
+  .footer {
+    position: absolute;
+    left: 18mm;
+    right: 18mm;
+    bottom: 9mm;
+    display: flex;
+    justify-content: space-between;
+    color: #7a828a;
+    font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    font-size: 9pt;
+    border-top: 1px solid #d9d4ca;
+    padding-top: 3mm;
+  }
+  h1, h2, h3 {
+    margin: 0;
+    font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+  h1 { font-size: 31pt; line-height: 1.15; color: #0f2638; }
+  h2 { font-size: 21.5pt; line-height: 1.2; color: #10344c; margin-bottom: 7mm; }
+  h3 { font-size: 13.2pt; color: #274c5e; margin: 4mm 0 2mm; }
+  p, li { font-size: 12pt; line-height: 1.68; }
+  p { margin: 0 0 4mm; }
+  ul, ol { margin: 2mm 0 4mm 7mm; padding-left: 5mm; }
+  li { margin: 1.35mm 0; }
+  .lead { font-size: 16pt; line-height: 1.62; color: #2f3c48; margin-top: 9mm; max-width: 158mm; }
+  .subtitle { font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif; font-size: 14pt; color: #6b4b20; margin-top: 6mm; }
+  .rule { width: 48mm; height: 1.4mm; background: #b45f2a; margin: 8mm 0 10mm; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 7mm; margin-top: 4mm; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4.5mm; margin-top: 4mm; }
+  .flow { display: grid; grid-template-columns: 1fr 9mm 1fr 9mm 1fr; align-items: center; gap: 2mm; margin-top: 5mm; }
+  .arrow { text-align: center; color: #8a5a24; font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif; font-size: 20pt; }
+  .box, .step {
+    border: 1px solid #d8cdbd;
+    background: #fbf8f1;
+    border-radius: 3mm;
+    padding: 4.6mm;
+  }
+  .step { min-height: 34mm; }
+  .box.blue, .step.blue { border-color: #bfd4dd; background: #f3f9fb; }
+  .box.amber, .step.amber { border-color: #dcc49b; background: #fff8e8; }
+  .box.green, .step.green { border-color: #b9d1c2; background: #f1faf4; }
+  .box h3, .step h3 { margin-top: 0; }
+  .box p, .box li, .step p, .step li { font-size: 10.9pt; line-height: 1.55; }
+  .formula {
+    margin: 4mm 0 5mm;
+    padding: 4mm 5mm;
+    background: #f7f7f2;
+    border: 1px solid #d7d7cf;
+    border-radius: 2mm;
+    text-align: center;
+    overflow: hidden;
+  }
+  .formula.tight { margin: 2.5mm 0 4mm; padding: 3mm 4mm; }
+  .formula.small { padding: 3.2mm 4mm; }
+  .umath {
+    font-family: "Cambria Math", "Cambria", "Noto Serif SC", "Microsoft YaHei", serif;
+    font-size: 18.2pt;
+    line-height: 1.25;
+  }
+  .formula.small .umath { font-size: 15.3pt; }
+  .note { color: #4c5964; font-size: 11pt; line-height: 1.6; }
+  .chalk {
+    font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    font-size: 10.8pt;
+    line-height: 1.58;
+    color: #263238;
+    border-left: 3px solid #b45f2a;
+    padding-left: 4mm;
+    margin-top: 4mm;
+  }
+  .summary-table { width: 100%; border-collapse: collapse; margin-top: 4mm; font-size: 10.6pt; }
+  .summary-table th, .summary-table td { border: 1px solid #d9d4ca; padding: 2.8mm; text-align: left; vertical-align: top; line-height: 1.48; }
+  .summary-table th { font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif; background: #eef4f5; color: #24485a; }
+  .svgbox { width: 100%; height: 54mm; margin: 2mm 0 1mm; }
+  .caption { color: #6d747b; font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif; font-size: 9.6pt; text-align: center; margin-top: 1mm; }
+  .compact p { margin-bottom: 2.5mm; }
+</style>
+</head>
+<body>
+<section class="page">
+  <div class="topline"><span>从 SGD 到 Muon</span><span>Lecture 05</span></div>
+  <h1>Muon 核心：动量矩阵<br>再做正交化</h1>
+  <div class="subtitle">第五讲：Newton-Schulz、极分解与谱范数下降</div>
+  <div class="rule"></div>
+  <p class="lead">Muon 的名字可以读成 MomentUm Orthogonalized by Newton-Schulz。它先形成矩阵动量，再把这个矩阵动量正交化，用谱更平坦的方向更新隐藏层权重。</p>
+  <div class="grid2" style="margin-top:14mm;">
+    <div class="box blue"><h3>本讲要回答</h3><ul><li>Muon 的基本更新式是什么？</li><li>Orth(M) = UV<sup>T</sup> 到底在做什么？</li><li>Newton-Schulz 为什么能近似正交化？</li><li>Muon 和 AdamW、Shampoo 的核心区别是什么？</li></ul></div>
+    <div class="box amber"><h3>本讲先不做</h3><ul><li>不展开所有 2026 年变体。</li><li>不把经验结论讲成定理。</li><li>不讲分布式系统细节，留到 lecture06。</li></ul></div>
+  </div>
+  <p class="note" style="position:absolute; bottom:28mm; left:18mm;">这组讲义会固定符号：F 表示当前训练目标，训练时通常 F = L̂<sub>N</sub>；g<sub>t</sub> 是 mini-batch 梯度，m<sub>t</sub> 是一阶动量。</p>
+  <div class="footer"><span>中文讲义</span><span>2026-06-19</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>01 Muon 的对象</span><span>2</span></div>
+  <h2>Muon 主要用于隐藏层的二维权重</h2>
+  
+    <p>设一个隐藏层权重为：</p>
+    <div class="formula tight"><span class="umath">W<sub>t</sub> ∈ ℝ<sup>m×n</sup></span></div>
+    <p>第 t 步 mini-batch 梯度为：</p>
+    <div class="formula tight"><span class="umath">G<sub>t</sub> = ∇<sub>W</sub>F(W<sub>t</sub>)</span></div>
+    <p>Muon 不通常用于所有参数。标量、向量、embedding 和输出头常用 AdamW 处理；Muon 主要用于隐藏层的二维矩阵参数。</p>
+    <div class="grid2">
+      <div class="box green"><h3>Muon 组</h3><p>线性层、MLP、attention 的隐藏层矩阵。</p></div>
+      <div class="box amber"><h3>AdamW 组</h3><p>bias、norm、embedding、输出头，以及不适合矩阵化的参数。</p></div>
+    </div>
+    <div class="chalk">这件事很重要：Muon 在实践中通常是混合优化器，不是全模型所有参数都用 Muon。</div>
+  
+  <div class="footer"><span>Muon 作用对象</span><span>2 / 12</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>02 基本更新</span><span>3</span></div>
+  <h2>Muon = Momentum + Orthogonalization</h2>
+  
+    <p>先形成矩阵动量。这里用归一化动量写法，代码中也常见未归一化写法，尺度可吸收到学习率里：</p>
+    <div class="formula tight"><span class="umath">M<sub>t</sub> = μM<sub>t-1</sub> + (1 - μ)G<sub>t</sub></span></div>
+    <p>然后对 M<sub>t</sub> 做正交化近似：</p>
+    <div class="formula tight"><span class="umath">U<sub>t</sub> ≈ Orth(M<sub>t</sub>)</span></div>
+    <p>最后更新权重：</p>
+    <div class="formula tight"><span class="umath">W<sub>t+1</sub> = W<sub>t</sub> - η<sub>t</sub>U<sub>t</sub></span></div>
+    <div class="flow">
+      <div class="step blue"><h3>梯度矩阵</h3><p>G<sub>t</sub> 来自 mini-batch。</p></div>
+      <div class="arrow">→</div>
+      <div class="step green"><h3>动量矩阵</h3><p>M<sub>t</sub> 降低时间噪声。</p></div>
+      <div class="arrow">→</div>
+      <div class="step amber"><h3>正交更新</h3><p>U<sub>t</sub> 压平奇异值。</p></div>
+    </div>
+  
+  <div class="footer"><span>Muon 三步</span><span>3 / 12</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>03 Orth(M)</span><span>4</span></div>
+  <h2>如果能做 SVD，Muon 的核心一行就很清楚</h2>
+  
+    <p>令动量矩阵的奇异值分解为：</p>
+    <div class="formula tight"><span class="umath">M<sub>t</sub> = U S V<sup>T</sup></span></div>
+    <p>理想正交化更新是：</p>
+    <div class="formula tight"><span class="umath">Orth(M<sub>t</sub>) = U V<sup>T</sup></span></div>
+    <p>这等价于把 S 里的奇异值全部替换成 1，只保留左右奇异向量。</p>
+    <div class="grid2">
+      <div class="box blue"><h3>方向信息</h3><p>U 和 V 描述矩阵更新主要连接哪些输入/输出子空间。</p></div>
+      <div class="box amber"><h3>幅值信息</h3><p>S 描述各个奇异方向的强弱，Muon 会把它压平。</p></div>
+    </div>
+    <div class="chalk">Muon 不是把每个元素变成 sign，而是把矩阵的奇异值谱变平。</div>
+  
+  <div class="footer"><span>极分解目标</span><span>4 / 12</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>04 为什么要压平谱？</span><span>5</span></div>
+  <h2>低秩动量会让少数方向支配学习</h2>
+  
+    <p>在许多深度网络层里，梯度或动量矩阵可能接近低秩：少数奇异方向很大，许多方向很小。</p>
+    <svg class="svgbox" viewBox="0 0 560 180" role="img" aria-label="谱压平示意图">
+      <rect width="560" height="180" fill="#fbf8f1"/>
+      <line x1="55" y1="145" x2="240" y2="145" stroke="#9aa5ad" stroke-width="2"/>
+      <line x1="55" y1="30" x2="55" y2="145" stroke="#9aa5ad" stroke-width="2"/>
+      <rect x="80" y="35" width="25" height="110" fill="#9bb8c4"/>
+      <rect x="120" y="70" width="25" height="75" fill="#9bb8c4"/>
+      <rect x="160" y="120" width="25" height="25" fill="#9bb8c4"/>
+      <rect x="200" y="134" width="25" height="11" fill="#9bb8c4"/>
+      <line x1="320" y1="145" x2="505" y2="145" stroke="#9aa5ad" stroke-width="2"/>
+      <line x1="320" y1="30" x2="320" y2="145" stroke="#9aa5ad" stroke-width="2"/>
+      <rect x="345" y="76" width="25" height="69" fill="#b45f2a"/>
+      <rect x="385" y="76" width="25" height="69" fill="#b45f2a"/>
+      <rect x="425" y="76" width="25" height="69" fill="#b45f2a"/>
+      <rect x="465" y="76" width="25" height="69" fill="#b45f2a"/>
+      <text x="82" y="165" font-size="14" fill="#5d6871">原始 M 的谱</text>
+      <text x="342" y="165" font-size="14" fill="#5d6871">Orth(M) 的谱</text>
+      <text x="262" y="95" font-size="22" fill="#8a5a24">→</text>
+    </svg>
+    <p>压平奇异值后，小奇异方向不会被完全淹没。直觉上，Muon 给矩阵更新更多“方向覆盖”。</p>
+    <div class="chalk">这是经验动机，不要误读成所有任务上的定理。严格说法是：Orth(M) 改变了矩阵更新的谱结构。</div>
+  
+  <div class="footer"><span>谱压平直觉</span><span>5 / 12</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>05 Newton-Schulz</span><span>6</span></div>
+  <h2>不用 SVD，怎样近似 Orth(M)？</h2>
+  
+    <p>Muon 使用 Newton-Schulz 类型的矩阵迭代。先归一化：</p>
+    <div class="formula tight"><span class="umath">X<sub>0</sub> = M / (||M||<sub>F</sub> + ε)</span></div>
+    <p>然后重复少量步骤：</p>
+    <div class="formula tight"><span class="umath">A<sub>k</sub> = X<sub>k</sub>X<sub>k</sub><sup>T</sup></span></div>
+    <div class="formula small"><span class="umath">X<sub>k+1</sub> = aX<sub>k</sub> + (bA<sub>k</sub> + cA<sub>k</sub><sup>2</sup>)X<sub>k</sub></span></div>
+    <p>常见 Muon 实现使用调过的系数：</p>
+    <div class="formula tight"><span class="umath">a = 3.4445, &nbsp; b = -4.7750, &nbsp; c = 2.0315</span></div>
+    <div class="chalk">实现里通常会在矩阵较高时先转置，让矩阵乘法更便宜；结束后再转回来。</div>
+  
+  <div class="footer"><span>Newton-Schulz 迭代</span><span>6 / 12</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>06 奇异值上的多项式</span><span>7</span></div>
+  <h2>Newton-Schulz 在奇异值上做同一个函数</h2>
+  
+    <p>若 X = U S V<sup>T</sup>，一次迭代会保持 U、V 不变，只改变奇异值：</p>
+    <div class="formula tight"><span class="umath">s &nbsp; → &nbsp; φ(s) = as + bs<sup>3</sup> + cs<sup>5</sup></span></div>
+    <p>重复 q 次就是把 φ 反复作用在每个奇异值上：</p>
+    <div class="formula tight"><span class="umath">S &nbsp; → &nbsp; φ<sup>q</sup>(S)</span></div>
+    <p>设计系数的目标是让区间内的奇异值快速靠近 1，从而得到接近 U V<sup>T</sup> 的矩阵。</p>
+    <div class="grid2">
+      <div class="box green"><h3>为什么快</h3><p>只用矩阵乘法，适合 GPU；实践中常用少量步数。</p></div>
+      <div class="box amber"><h3>为什么近似</h3><p>小奇异值可能不完全到 1，因此正交化质量和步数、谱分布有关。</p></div>
+    </div>
+    <div class="chalk">Muon 的高效来自这里：用低精度矩阵乘法近似本来要 SVD 才能精确得到的极分解方向。</div>
+  
+  <div class="footer"><span>多项式谱变换</span><span>7 / 12</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>07 Nesterov 风格</span><span>8</span></div>
+  <h2>实践里常把 Nesterov 思想放进 Muon</h2>
+  
+    <p>Muon 可以使用普通动量，也可以使用 Nesterov 风格的动量信号。直觉是先沿已有动量看一眼，再计算新的梯度信号。</p>
+    <div class="formula small"><span class="umath">lookahead: &nbsp; W<sub>t</sub><sup>look</sup> = W<sub>t</sub> - ημM<sub>t-1</sub></span></div>
+    <div class="formula small"><span class="umath">G<sub>t</sub> = ∇F(W<sub>t</sub><sup>look</sup>), &nbsp; M<sub>t</sub> = μM<sub>t-1</sub> + (1 - μ)G<sub>t</sub></span></div>
+    <p>然后仍然执行：</p>
+    <div class="formula small"><span class="umath">U<sub>t</sub> ≈ Orth(M<sub>t</sub>), &nbsp; W<sub>t+1</sub> = W<sub>t</sub> - ηU<sub>t</sub></span></div>
+    <div class="chalk">记住主线即可：Nesterov 改的是动量信号的形成方式，不改变“动量后正交化”这个核心结构。</div>
+  
+  <div class="footer"><span>Nesterov Muon</span><span>8 / 12</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>08 维度检查</span><span>9</span></div>
+  <h2>Muon 的每个矩阵都应该形状一致</h2>
+  
+    <p>如果 W<sub>t</sub> ∈ ℝ<sup>m×n</sup>，那么：</p>
+    <table class="summary-table">
+      <tr><th>对象</th><th>形状</th><th>含义</th></tr>
+      <tr><td>G<sub>t</sub></td><td>m × n</td><td>当前 batch 的梯度矩阵</td></tr>
+      <tr><td>M<sub>t</sub></td><td>m × n</td><td>动量矩阵</td></tr>
+      <tr><td>U<sub>t</sub></td><td>m × n</td><td>正交化后的更新矩阵</td></tr>
+      <tr><td>W<sub>t+1</sub></td><td>m × n</td><td>更新后的权重</td></tr>
+    </table>
+    <p>若 m ≥ n，理想 U<sub>t</sub> 满足 U<sub>t</sub><sup>T</sup>U<sub>t</sub> ≈ I；若 m ≤ n，则 U<sub>t</sub>U<sub>t</sub><sup>T</sup> ≈ I。</p>
+    <div class="chalk">这就是“半正交”：矩阵不一定方，但短边方向尽量正交。</div>
+  
+  <div class="footer"><span>形状与半正交</span><span>9 / 12</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>09 与 AdamW 对比</span><span>10</span></div>
+  <h2>AdamW 缩放坐标，Muon 整理奇异值</h2>
+  
+    <table class="summary-table">
+      <tr><th>维度</th><th>AdamW</th><th>Muon</th></tr>
+      <tr><td>主要状态</td><td>m<sub>t</sub>, v<sub>t</sub></td><td>M<sub>t</sub></td></tr>
+      <tr><td>缩放方式</td><td>逐坐标除以 √v̂</td><td>把矩阵动量正交化</td></tr>
+      <tr><td>几何对象</td><td>坐标轴</td><td>矩阵奇异向量和奇异值</td></tr>
+      <tr><td>适用参数</td><td>几乎所有参数</td><td>主要是二维隐藏层权重</td></tr>
+    </table>
+    <p>所以 Muon 不是 Adam 的简单替代品。实践中常常是 Muon 和 AdamW 混用。</p>
+    <div class="formula small"><span class="umath">hidden matrices → Muon, &nbsp; vectors/scalars/embeddings/head → AdamW</span></div>
+    <div class="chalk">AdamW 是默认强基线；Muon 的价值在于对隐藏层矩阵更新做更结构化的处理。</div>
+  
+  <div class="footer"><span>AdamW vs Muon</span><span>10 / 12</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>10 与 Shampoo 对比</span><span>11</span></div>
+  <h2>Muon 更像轻量的瞬时矩阵几何</h2>
+  
+    <p>Shampoo 维护累积预条件器，Muon 只维护动量并正交化当前动量信号。</p>
+    <table class="summary-table">
+      <tr><th>方法</th><th>核心状态</th><th>计算重点</th><th>直觉</th></tr>
+      <tr><td>Shampoo</td><td>L<sub>t</sub>, R<sub>t</sub></td><td>矩阵逆根</td><td>长期估计左右空间曲率</td></tr>
+      <tr><td>Muon</td><td>M<sub>t</sub></td><td>Newton-Schulz 正交化</td><td>把当前动量方向谱压平</td></tr>
+      <tr><td>SOAP</td><td>矩阵基 + Adam 状态</td><td>基变换和二阶矩</td><td>矩阵空间里的 Adam 风格缩放</td></tr>
+    </table>
+    <p>Muon 的吸引力在于它把矩阵几何压缩成一个相对简单、矩阵乘法友好的子程序。</p>
+    <div class="chalk">如果 lecture04 是“为什么 Orth 会出现”，本讲就是“如何把 Orth 做得足够快”。</div>
+  
+  <div class="footer"><span>Muon 与矩阵预条件</span><span>11 / 12</span></div>
+</section>
+
+<section class="page">
+  <div class="topline"><span>11 小结</span><span>12</span></div>
+  <h2>本讲你应该带走的四句话</h2>
+  
+    <ol>
+      <li>Muon 先对二维隐藏层权重形成矩阵动量 M<sub>t</sub>。</li>
+      <li>理想更新方向是 Orth(M<sub>t</sub>) = U V<sup>T</sup>。</li>
+      <li>Newton-Schulz 用少量矩阵乘法近似这个极分解方向。</li>
+      <li>Muon 改变的是矩阵奇异值结构，不是 Adam 式逐坐标二阶矩。</li>
+    </ol>
+    <div class="formula tight"><span class="umath">M<sub>t</sub> → Orth(M<sub>t</sub>) → W<sub>t+1</sub> = W<sub>t</sub> - ηU<sub>t</sub></span></div>
+    <div class="grid2">
+      <div class="box blue"><h3>课后自检</h3><ul><li>能否说明 Orth(M) 保留和丢掉了什么？</li><li>能否解释 Newton-Schulz 为什么只需矩阵乘法？</li></ul></div>
+      <div class="box amber"><h3>下一讲预告</h3><p>我们会讲怎么真的用 Muon：参数分组、权重衰减、缩放、QKV、分布式成本和变体地图。</p></div>
+    </div>
+  
+  <div class="footer"><span>下一讲：Muon 实践</span><span>12 / 12</span></div>
+</section>
+</body>
+</html>
